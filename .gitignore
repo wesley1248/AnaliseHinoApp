@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+package-lock.json.bak
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native builds (if generated later)
+android/
+ios/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# SQLite database local dev files (if dumped)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Reports and temporary artifacts
+*.pdf
+coverage/

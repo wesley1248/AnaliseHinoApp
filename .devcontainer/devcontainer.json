@@ -1,0 +1,24 @@
+{
+  "name": "Analise Hinos App (React Native / Expo)",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "forwardPorts": [8081],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "expo.vscode-expo-tools",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+  "remoteUser": "node"
+}
