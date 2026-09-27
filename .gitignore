@@ -6,10 +6,20 @@ package-lock.json.bak
 .expo/
 dist/
 web-build/
+expo-env.d.ts
 
-# Native builds (if generated later)
+# Native builds
 android/
 ios/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
 
 # Environment variables
 .env
@@ -24,8 +34,12 @@ yarn-error.log*
 # System files
 .DS_Store
 Thumbs.db
+*.pem
 
-# SQLite database local dev files (if dumped)
+# TypeScript
+*.tsbuildinfo
+
+# SQLite database local dev files
 *.db
 *.db-journal
 *.db-shm
