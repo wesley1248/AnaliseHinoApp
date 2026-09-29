@@ -53,7 +53,7 @@ O objetivo é substituir e modernizar o fluxo legado de planilhas Excel e script
 ## 6. Roteiro de Entregas (Roadmap por Etapas)
 - [x] **Etapa 1:** Setup do repositório Git, `.gitignore` e ambiente isolado `.devcontainer`.
 - [x] **Etapa 2:** Inicialização do Expo (SDK 52+) com TypeScript, Expo Router, Jest e estrutura de pastas.
-- [ ] **Etapa 3:** Camada de banco de dados (`expo-sqlite`), migrations, entidade de domínio e testes unitários de desduplicação.
+- [x] **Etapa 3:** Camada de banco de dados (`expo-sqlite`), migrations, entidade de domínio e testes unitários de desduplicação.
 - [ ] **Etapa 4:** Construção da UI:
   - [ ] Tela de Lançamento rápido com Haptics.
   - [ ] Tela de Dashboard com métricas e rankings.
