@@ -1,54 +1,99 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { useDailyLaunch } from '@/presentation/hooks/useDailyLaunch';
+import {
+  HeaderDateSelector,
+  HymnInputDisplay,
+  NumericKeypad,
+  DailyHymnList,
+} from '@/presentation/components/launch';
 
 export default function LancamentoScreen() {
+  const {
+    selectedDate,
+    currentNumber,
+    hymnsToday,
+    isLoading,
+    error,
+    typeDigit,
+    backspace,
+    clear,
+    addHymn,
+    removeHymn,
+    goToPreviousDay,
+    goToNextDay,
+  } = useDailyLaunch();
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Lançamento de Hinos</Text>
-        <Text style={styles.subtitle}>Registro de hinos tocados na data</Text>
-      </View>
-      <View style={styles.content}>
-        <Text style={styles.placeholderText}>
-          Teclado numérico rápido e lista diária de hinos em desenvolvimento.
-        </Text>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        <HeaderDateSelector
+          selectedDate={selectedDate}
+          onPrevious={goToPreviousDay}
+          onNext={goToNextDay}
+        />
+
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
+        <HymnInputDisplay
+          value={currentNumber}
+          onBackspace={backspace}
+        />
+
+        <NumericKeypad
+          onDigitPress={typeDigit}
+          onClear={clear}
+          onAddPress={addHymn}
+          canAdd={currentNumber.length > 0 && !isLoading}
+        />
+
+        <DailyHymnList
+          hymns={hymnsToday}
+          onRemove={removeHymn}
+          isLoading={isLoading}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0F172A', // Slate-900 Dark Modern
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+  scrollContent: {
+    paddingBottom: 40,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#0F172A',
+  errorBanner: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: '#7F1D1D',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EF4444',
   },
-  subtitle: {
+  errorText: {
+    color: '#FEE2E2',
     fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  placeholderText: {
-    fontSize: 15,
-    color: '#94A3B8',
+    fontWeight: '600',
     textAlign: 'center',
   },
 });

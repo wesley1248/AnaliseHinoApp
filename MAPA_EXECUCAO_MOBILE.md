@@ -20,11 +20,11 @@ O objetivo é substituir e modernizar o fluxo legado de planilhas Excel e script
 ---
 
 ## 4. Stack Técnica Homologada
-* **Framework:** React Native + Expo (SDK 52+).
+* **Framework:** React Native + Expo (SDK 57+ com React 19).
 * **Navegação:** Expo Router (File-based routing com navegação por Abas / Tabs).
 * **Linguagem:** TypeScript (Strict mode).
-* **Persistência Local:** `expo-sqlite` (armazenamento relacional no dispositivo).
-* **UI & Estilo:** NativeWind (Tailwind CSS) + `lucide-react-native`.
+* **Persistência Local:** `expo-sqlite` (Mobile Android/iOS) + `WebLocalStorageHymnRepository` (Web Preview).
+* **UI & Estilo:** NativeWind (Tailwind CSS) + `lucide-react-native` / Vector Icons.
 * **Feedback Tátil:** `expo-haptics` para digitação no teclado numérico customizado.
 * **Relatórios e Compartilhamento:** `expo-print` (HTML para PDF) + `expo-sharing` (envio direto via WhatsApp).
 * **Importação Legada:** `expo-document-picker` + `xlsx` (SheetJS) para ler `.xlsx`.
@@ -52,10 +52,10 @@ O objetivo é substituir e modernizar o fluxo legado de planilhas Excel e script
 
 ## 6. Roteiro de Entregas (Roadmap por Etapas)
 - [x] **Etapa 1:** Setup do repositório Git, `.gitignore` e ambiente isolado `.devcontainer`.
-- [x] **Etapa 2:** Inicialização do Expo (SDK 52+) com TypeScript, Expo Router, Jest e estrutura de pastas.
+- [x] **Etapa 2:** Inicialização do Expo (SDK 57+) com TypeScript, Expo Router, Jest e estrutura de pastas.
 - [x] **Etapa 3:** Camada de banco de dados (`expo-sqlite`), migrations, entidade de domínio e testes unitários de desduplicação.
 - [ ] **Etapa 4:** Construção da UI:
-  - [ ] Tela de Lançamento rápido com Haptics.
+  - [x] Tela de Lançamento rápido com Haptics, Teclado Numérico Customizado e Persistência Integrada.
   - [ ] Tela de Dashboard com métricas e rankings.
   - [ ] Tela de Exportação de PDF com `expo-print` e compartilhamento nativo.
   - [ ] Tela de Importação de planilhas `.xlsx`.
