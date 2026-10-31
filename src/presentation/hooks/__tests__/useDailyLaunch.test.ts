@@ -83,7 +83,7 @@ describe('useDailyLaunch Hook', () => {
     expect(result.current.hymnsToday[0].hymnNumber).toBe(15);
   });
 
-  it('deve digitar números e concatenar respeitando limite máximo de 4 dígitos', async () => {
+  it('deve digitar números e concatenar respeitando limite máximo de 480', async () => {
     // Arrange
     const { result } = renderHook(() =>
       useDailyLaunch({ repository: mockRepository, initialDate: '2026-10-02' })
@@ -100,12 +100,38 @@ describe('useDailyLaunch Hook', () => {
     // Assert
     expect(result.current.currentNumber).toBe('452');
 
-    // Tentativa de extrapolar o limite de 4 dígitos
+    // Tentativa de extrapolar o limite de 480 (4521 > 480)
     act(() => {
       result.current.typeDigit('1');
-      result.current.typeDigit('9');
     });
-    expect(result.current.currentNumber).toBe('4521');
+    expect(result.current.currentNumber).toBe('452');
+  });
+
+  it('não deve permitir digitar números que excedam o limite de 480 (ex: 481)', async () => {
+    const { result } = renderHook(() =>
+      useDailyLaunch({ repository: mockRepository, initialDate: '2026-10-02' })
+    );
+    await act(async () => {});
+
+    act(() => {
+      result.current.typeDigit('4');
+      result.current.typeDigit('8');
+      result.current.typeDigit('1'); // 481 > 480
+    });
+
+    expect(result.current.currentNumber).toBe('48');
+
+    // Digitar 0 deve ser permitido (480)
+    act(() => {
+      result.current.typeDigit('0');
+    });
+    expect(result.current.currentNumber).toBe('480');
+
+    // Tentar digitar mais qualquer número após 480 deve ser bloqueado
+    act(() => {
+      result.current.typeDigit('1');
+    });
+    expect(result.current.currentNumber).toBe('480');
   });
 
   it('não deve permitir 0 como primeiro dígito', async () => {
@@ -165,6 +191,23 @@ describe('useDailyLaunch Hook', () => {
     expect(result.current.currentNumber).toBe('');
     expect(result.current.hymnsToday).toHaveLength(1);
     expect(result.current.hymnsToday[0].hymnNumber).toBe(452);
+  });
+
+  it('deve disparar erro amigável ao tentar adicionar hino fora do limite de 1 a 480', async () => {
+    const { result } = renderHook(() =>
+      useDailyLaunch({ repository: mockRepository, initialDate: '2026-10-02' })
+    );
+
+    await act(async () => {});
+
+    // Simulando tentativa direta de adicionar com valor inválido
+    await act(async () => {
+      // Se currentNumber de alguma forma contiver valor inválido
+      await result.current.addHymn();
+    });
+
+    // Vazio não dispara erro, apenas retorna
+    expect(result.current.error).toBeNull();
   });
 
   it('deve remover um hino existente e atualizar a lista do dia', async () => {

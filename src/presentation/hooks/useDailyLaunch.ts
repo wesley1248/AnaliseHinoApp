@@ -105,7 +105,7 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
   }, [selectedDate, loadHymnsForDate]);
 
   /**
-   * Adiciona um dígito numérico ao buffer atual (máximo 4 dígitos).
+   * Adiciona um dígito numérico ao buffer atual respeitando o limite oficial do hinário (1 a 480).
    */
   const typeDigit = useCallback((digit: string) => {
     if (!/^\d$/.test(digit)) return;
@@ -113,10 +113,16 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
     setCurrentNumber(prev => {
       // Impede 0 como primeiro dígito
       if (prev.length === 0 && digit === '0') return prev;
-      // Limite de 4 dígitos (hinos vão até ~480 / 1000)
-      if (prev.length >= 4) return prev;
+
+      const nextCandidate = prev + digit;
+      const numCandidate = parseInt(nextCandidate, 10);
+
+      // Trava estrita no limite oficial do hinário (1 a 480)
+      if (numCandidate > 480) return prev;
+
+      setError(null);
       triggerHapticFeedback();
-      return prev + digit;
+      return nextCandidate;
     });
   }, []);
 
@@ -124,6 +130,7 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
    * Apaga o último dígito inserido no buffer.
    */
   const backspace = useCallback(() => {
+    setError(null);
     setCurrentNumber(prev => {
       if (prev.length === 0) return prev;
       triggerHapticFeedback();
@@ -135,6 +142,7 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
    * Limpa o buffer de digitação.
    */
   const clear = useCallback(() => {
+    setError(null);
     setCurrentNumber('');
     triggerHapticFeedback();
   }, []);
@@ -146,9 +154,13 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
     if (!currentNumber) return;
 
     const num = parseInt(currentNumber, 10);
-    if (isNaN(num) || num <= 0) return;
+    if (isNaN(num) || num < 1 || num > 480) {
+      setError('O hinário possui apenas os hinos de 1 a 480.');
+      return;
+    }
 
     setIsLoading(true);
+    setError(null);
     try {
       const repo = await resolveRepository();
       await repo.addOccurrence({
