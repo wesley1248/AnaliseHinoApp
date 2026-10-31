@@ -21,7 +21,7 @@ Ao baixar e tentar instalar o arquivo `.apk` diretamente (fora da loja oficial d
 
 ### 📲 Passo a Passo para Instalar o APK no seu Celular:
 
-1. **Baixe o arquivo `.apk`** mais recente na aba de [Releases do GitHub](#).
+1. **Baixe o arquivo `.apk`** mais recente na aba de [Releases do GitHub](https://github.com/wesley1248/AnaliseHinoApp/releases/latest).
 2. **Abra o arquivo baixado** através da notificação de download do navegador ou pelo aplicativo de *Arquivos / Gerenciador de Arquivos* do seu celular.
 3. **Se o Android solicitar permissão de "Fontes Desconhecidas":**
    * Surgirá uma mensagem: *"Para sua segurança, o smartphone não tem permissão para instalar apps desconhecidos desta fonte"*.
