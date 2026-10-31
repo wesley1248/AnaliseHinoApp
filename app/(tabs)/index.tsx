@@ -1,24 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Platform,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDailyLaunch } from '@/presentation/hooks/useDailyLaunch';
 import {
   HeaderDateSelector,
   HymnInputDisplay,
   NumericKeypad,
   DailyHymnList,
+  DatePickerModal,
+  DeleteRangeModal,
 } from '@/presentation/components/launch';
 
 export default function LancamentoScreen() {
   const {
     selectedDate,
+    setSelectedDate,
     currentNumber,
     hymnsToday,
     isLoading,
@@ -28,12 +30,16 @@ export default function LancamentoScreen() {
     clear,
     addHymn,
     removeHymn,
+    deleteHymnsByRange,
     goToPreviousDay,
     goToNextDay,
   } = useDailyLaunch();
 
+  const [isCalendarVisible, setIsCalendarVisible] = useState<boolean>(false);
+  const [isDeleteRangeVisible, setIsDeleteRangeVisible] = useState<boolean>(false);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -44,6 +50,8 @@ export default function LancamentoScreen() {
           selectedDate={selectedDate}
           onPrevious={goToPreviousDay}
           onNext={goToNextDay}
+          onOpenCalendar={() => setIsCalendarVisible(true)}
+          onOpenDeleteRange={() => setIsDeleteRangeVisible(true)}
         />
 
         {error && (
@@ -70,6 +78,24 @@ export default function LancamentoScreen() {
           isLoading={isLoading}
         />
       </ScrollView>
+
+      {/* Modal de Calendário Interativo */}
+      <DatePickerModal
+        visible={isCalendarVisible}
+        currentDate={selectedDate}
+        onSelectDate={(newDate) => {
+          setSelectedDate(newDate);
+          setIsCalendarVisible(false);
+        }}
+        onClose={() => setIsCalendarVisible(false)}
+      />
+
+      {/* Modal de Exclusão por Intervalo */}
+      <DeleteRangeModal
+        visible={isDeleteRangeVisible}
+        onClose={() => setIsDeleteRangeVisible(false)}
+        onConfirmDelete={deleteHymnsByRange}
+      />
     </SafeAreaView>
   );
 }
@@ -78,7 +104,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#0F172A', // Slate-900 Dark Modern
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0,
   },
   scrollContent: {
     paddingBottom: 40,

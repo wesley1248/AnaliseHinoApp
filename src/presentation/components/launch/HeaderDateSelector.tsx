@@ -6,6 +6,8 @@ export interface HeaderDateSelectorProps {
   selectedDate: string;
   onPrevious: () => void;
   onNext: () => void;
+  onOpenCalendar?: () => void;
+  onOpenDeleteRange?: () => void;
 }
 
 /**
@@ -40,19 +42,53 @@ export function HeaderDateSelector({
   selectedDate,
   onPrevious,
   onNext,
+  onOpenCalendar,
+  onOpenDeleteRange,
 }: HeaderDateSelectorProps) {
+  const DateContent = (
+    <View style={styles.dateLabelContainer}>
+      <Ionicons name="calendar-outline" size={18} color="#60A5FA" style={styles.icon} />
+      <Text style={styles.dateText}>{formatDateLabel(selectedDate)}</Text>
+      {onOpenCalendar && (
+        <Ionicons name="chevron-down" size={14} color="#64748B" style={styles.dropdownIcon} />
+      )}
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.titleRow}>
-        <Text style={styles.title}>Lançar Hinos</Text>
-        <Text style={styles.subtitle}>Registro rápido de culto</Text>
+        <View style={styles.titleColumn}>
+          <Text style={styles.title}>Lançar Hinos</Text>
+          <Text style={styles.subtitle}>Registro rápido de culto</Text>
+        </View>
+
+        {onOpenDeleteRange && (
+          <TouchableOpacity
+            testID="btn-open-delete-range"
+            onPress={onOpenDeleteRange}
+            style={styles.deleteRangeButton}
+            accessibilityLabel="Excluir período de hinos"
+          >
+            <Ionicons name="trash-outline" size={16} color="#F87171" />
+            <Text style={styles.deleteRangeText}>Excluir Período</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.pillContainer}>
-        <View style={styles.dateLabelContainer}>
-          <Ionicons name="calendar-outline" size={18} color="#60A5FA" style={styles.icon} />
-          <Text style={styles.dateText}>{formatDateLabel(selectedDate)}</Text>
-        </View>
+        {onOpenCalendar ? (
+          <TouchableOpacity
+            testID="btn-open-calendar"
+            onPress={onOpenCalendar}
+            style={styles.dateLabelTouchable}
+            accessibilityLabel="Abrir calendário para escolher data"
+          >
+            {DateContent}
+          </TouchableOpacity>
+        ) : (
+          DateContent
+        )}
 
         <View style={styles.navButtons}>
           <TouchableOpacity
@@ -86,7 +122,13 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  titleColumn: {
+    flex: 1,
   },
   title: {
     fontSize: 26,
@@ -99,6 +141,22 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     marginTop: 2,
   },
+  deleteRangeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  deleteRangeText: {
+    color: '#F87171',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   pillContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -110,12 +168,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#334155',
   },
+  dateLabelTouchable: {
+    flex: 1,
+  },
   dateLabelContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   icon: {
     marginRight: 10,
+  },
+  dropdownIcon: {
+    marginLeft: 6,
   },
   dateText: {
     color: '#F1F5F9',

@@ -32,6 +32,12 @@ class InMemoryHymnRepository implements IHymnRepository {
     return this.occurrences.length < initialLen;
   }
 
+  async deleteOccurrencesByDateRange(startDate: string, endDate: string): Promise<number> {
+    const initialLen = this.occurrences.length;
+    this.occurrences = this.occurrences.filter(o => o.date < startDate || o.date > endDate);
+    return initialLen - this.occurrences.length;
+  }
+
   async getByDate(date: string): Promise<HymnOccurrence[]> {
     return this.occurrences.filter(o => o.date === date);
   }
@@ -262,5 +268,33 @@ describe('useDailyLaunch Hook', () => {
     expect(result.current.selectedDate).toBe('2026-10-02');
     expect(result.current.hymnsToday).toHaveLength(1);
     expect(result.current.hymnsToday[0].hymnNumber).toBe(20);
+  });
+  it('deve excluir hinos por intervalo de datas e recarregar a listagem se a data atual estiver no intervalo', async () => {
+    // Arrange
+    await mockRepository.addOccurrence({ hymnNumber: 10, date: '2026-10-02' });
+    await mockRepository.addOccurrence({ hymnNumber: 20, date: '2026-10-05' });
+    await mockRepository.addOccurrence({ hymnNumber: 30, date: '2026-10-10' });
+
+    const { result } = renderHook(() =>
+      useDailyLaunch({ repository: mockRepository, initialDate: '2026-10-05' })
+    );
+    await act(async () => {});
+    expect(result.current.hymnsToday).toHaveLength(1);
+    expect(result.current.hymnsToday[0].hymnNumber).toBe(20);
+
+    // Act - Exclui período de 2026-10-04 a 2026-10-06 (inclui a data atual 2026-10-05)
+    let deletedCount = 0;
+    await act(async () => {
+      deletedCount = await result.current.deleteHymnsByRange('2026-10-04', '2026-10-06');
+    });
+
+    // Assert
+    expect(deletedCount).toBe(1);
+    expect(result.current.hymnsToday).toHaveLength(0);
+
+    // Verifica que os outros hinos fora do intervalo continuam na base
+    const remaining = await mockRepository.getAllOccurrences();
+    expect(remaining).toHaveLength(2);
+    expect(remaining.map(o => o.hymnNumber)).toEqual([10, 30]);
   });
 });

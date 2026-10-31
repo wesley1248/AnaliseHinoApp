@@ -215,6 +215,34 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
     triggerHapticFeedback();
   }, [selectedDate]);
 
+  /**
+   * Remove em lote todas as ocorrências de hinos dentro de um intervalo de datas.
+   * Recarrega a listagem diária caso a data selecionada esteja dentro do intervalo.
+   * 
+   * @param startDate Data inicial no formato YYYY-MM-DD
+   * @param endDate Data final no formato YYYY-MM-DD
+   * @returns Quantidade total de registros excluídos
+   */
+  const deleteHymnsByRange = useCallback(async (startDate: string, endDate: string): Promise<number> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const repo = await resolveRepository();
+      const count = await repo.deleteOccurrencesByDateRange(startDate, endDate);
+      triggerHapticFeedback();
+      if (selectedDate >= startDate && selectedDate <= endDate) {
+        await loadHymnsForDate(selectedDate);
+      }
+      return count;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao excluir hinos por intervalo';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedDate, resolveRepository, loadHymnsForDate]);
+
   return {
     selectedDate,
     setSelectedDate,
@@ -227,6 +255,7 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
     clear,
     addHymn,
     removeHymn,
+    deleteHymnsByRange,
     goToPreviousDay,
     goToNextDay,
     refresh: () => loadHymnsForDate(selectedDate),

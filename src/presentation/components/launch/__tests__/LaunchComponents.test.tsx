@@ -1,10 +1,12 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import {
   HeaderDateSelector,
   HymnInputDisplay,
   NumericKeypad,
   DailyHymnList,
+  DatePickerModal,
+  DeleteRangeModal,
 } from '../index';
 import { HymnOccurrence } from '../../../../domain/entities/HymnOccurrence';
 
@@ -30,6 +32,28 @@ describe('Launch Screen UI Components', () => {
 
       fireEvent.press(getByTestId('btn-next-date'));
       expect(onNext).toHaveBeenCalledTimes(1);
+    });
+
+    it('deve disparar callbacks de abrir calendário e excluir período quando fornecidos', () => {
+      const onOpenCalendar = jest.fn();
+      const onOpenDeleteRange = jest.fn();
+
+      const { getByTestId, getByText } = render(
+        <HeaderDateSelector
+          selectedDate="2026-10-02"
+          onPrevious={jest.fn()}
+          onNext={jest.fn()}
+          onOpenCalendar={onOpenCalendar}
+          onOpenDeleteRange={onOpenDeleteRange}
+        />
+      );
+
+      expect(getByText('Excluir Período')).toBeTruthy();
+      fireEvent.press(getByTestId('btn-open-delete-range'));
+      expect(onOpenDeleteRange).toHaveBeenCalledTimes(1);
+
+      fireEvent.press(getByTestId('btn-open-calendar'));
+      expect(onOpenCalendar).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -126,6 +150,121 @@ describe('Launch Screen UI Components', () => {
 
       fireEvent.press(getByTestId('btn-remove-10'));
       expect(onRemove).toHaveBeenCalledWith(10);
+    });
+  });
+
+  describe('DatePickerModal', () => {
+    it('deve renderizar o calendário e permitir selecionar dia e confirmar', () => {
+      const onSelectDate = jest.fn();
+      const onClose = jest.fn();
+
+      const { getByText, getByTestId } = render(
+        <DatePickerModal
+          visible={true}
+          currentDate="2026-10-15"
+          onSelectDate={onSelectDate}
+          onClose={onClose}
+        />
+      );
+
+      expect(getByText('Selecionar Data')).toBeTruthy();
+      expect(getByText(/Outubro de 2026/)).toBeTruthy();
+
+      // Clica no dia 20 de outubro
+      const day20Btn = getByTestId('btn-cal-day-2026-10-20');
+      fireEvent.press(day20Btn);
+
+      // Clica em confirmar
+      fireEvent.press(getByTestId('btn-cal-confirm'));
+      expect(onSelectDate).toHaveBeenCalledWith('2026-10-20');
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it('deve permitir navegar meses para frente e para trás', () => {
+      const { getByText, getByTestId } = render(
+        <DatePickerModal
+          visible={true}
+          currentDate="2026-10-15"
+          onSelectDate={jest.fn()}
+          onClose={jest.fn()}
+        />
+      );
+
+      expect(getByText(/Outubro de 2026/)).toBeTruthy();
+
+      // Avança para novembro
+      fireEvent.press(getByTestId('btn-cal-next-month'));
+      expect(getByText(/Novembro de 2026/)).toBeTruthy();
+
+      // Volta para outubro
+      fireEvent.press(getByTestId('btn-cal-prev-month'));
+      expect(getByText(/Outubro de 2026/)).toBeTruthy();
+    });
+
+    it('deve fechar ao pressionar cancelar', () => {
+      const onClose = jest.fn();
+      const { getByTestId } = render(
+        <DatePickerModal
+          visible={true}
+          currentDate="2026-10-15"
+          onSelectDate={jest.fn()}
+          onClose={onClose}
+        />
+      );
+
+      fireEvent.press(getByTestId('btn-cal-cancel'));
+      expect(onClose).toHaveBeenCalled();
+    });
+  });
+
+  describe('DeleteRangeModal', () => {
+    it('deve permitir selecionar intervalo de datas e executar exclusão na confirmação', async () => {
+      const onConfirmDelete = jest.fn().mockResolvedValue(5);
+      const onClose = jest.fn();
+
+      const { getByText, getByTestId } = render(
+        <DeleteRangeModal
+          visible={true}
+          onClose={onClose}
+          onConfirmDelete={onConfirmDelete}
+        />
+      );
+
+      expect(getByText('Exclusão por Intervalo')).toBeTruthy();
+
+      // Avança para tela de confirmação
+      fireEvent.press(getByTestId('btn-advance-delete'));
+      expect(getByText('Atenção: Ação Irreversível')).toBeTruthy();
+
+      // Confirma a exclusão
+      await act(async () => {
+        fireEvent.press(getByTestId('btn-execute-delete'));
+      });
+
+      expect(onConfirmDelete).toHaveBeenCalledTimes(1);
+      expect(getByText('5 hinos foram excluídos com sucesso!')).toBeTruthy();
+
+      // Clica em OK
+      fireEvent.press(getByTestId('btn-feedback-ok'));
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it('deve permitir usar atalhos rápidos e fechar', () => {
+      const onClose = jest.fn();
+      const { getByTestId } = render(
+        <DeleteRangeModal
+          visible={true}
+          onClose={onClose}
+          onConfirmDelete={jest.fn()}
+        />
+      );
+
+      fireEvent.press(getByTestId('btn-shortcut-last-7'));
+      fireEvent.press(getByTestId('btn-shortcut-month'));
+      fireEvent.press(getByTestId('btn-shortcut-today'));
+
+      fireEvent.press(getByTestId('btn-close-delete-modal'));
+      expect(onClose).toHaveBeenCalled();
     });
   });
 });
