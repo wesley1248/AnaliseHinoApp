@@ -50,8 +50,9 @@ async function main() {
   console.log(`Navegando para ${url}...`);
   await send('Page.navigate', { url });
 
-  // Aguarda 4 segundos para o React Native Web renderizar todos os componentes
-  await new Promise(r => setTimeout(r, 4000));
+  // Aguarda a compilação do bundle e renderização no React Native Web
+  console.log('Aguardando renderização dos componentes...');
+  await new Promise(r => setTimeout(r, 6000));
 
   console.log('Capturando screenshot...');
   const result = await send('Page.captureScreenshot', { format: 'png' });

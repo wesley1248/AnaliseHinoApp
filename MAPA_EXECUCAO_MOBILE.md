@@ -54,9 +54,9 @@ O objetivo é substituir e modernizar o fluxo legado de planilhas Excel e script
 - [x] **Etapa 1:** Setup do repositório Git, `.gitignore` e ambiente isolado `.devcontainer`.
 - [x] **Etapa 2:** Inicialização do Expo (SDK 57+) com TypeScript, Expo Router, Jest e estrutura de pastas.
 - [x] **Etapa 3:** Camada de banco de dados (`expo-sqlite`), migrations, entidade de domínio e testes unitários de desduplicação.
-- [ ] **Etapa 4:** Construção da UI:
+- [x] **Etapa 4:** Construção da UI:
   - [x] Tela de Lançamento rápido com Haptics, Teclado Numérico Customizado e Persistência Integrada.
   - [x] Tela de Dashboard com métricas e rankings consolidados via TDD.
-  - [ ] Tela de Exportação de PDF com `expo-print` e compartilhamento nativo.
-  - [ ] Tela de Importação de planilhas `.xlsx`.
+  - [x] Tela de Exportação de PDF com `expo-print` e compartilhamento nativo.
+  - [x] Tela de Importação de planilhas `.xlsx`.
 - [ ] **Etapa 5:** Validação de QA local, testes 100% verdes, documentação final e entrega no GitHub.
