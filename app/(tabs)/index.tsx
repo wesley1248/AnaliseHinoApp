@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Platform,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -77,6 +78,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#0F172A', // Slate-900 Dark Modern
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0,
   },
   scrollContent: {
     paddingBottom: 40,

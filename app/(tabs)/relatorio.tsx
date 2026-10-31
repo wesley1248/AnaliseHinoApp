@@ -8,6 +8,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  Platform,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -100,6 +101,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#0F172A',
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0,
   },
   header: {
     backgroundColor: '#0F172A',
