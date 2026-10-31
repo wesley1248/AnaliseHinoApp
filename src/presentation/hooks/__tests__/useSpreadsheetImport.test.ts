@@ -10,6 +10,7 @@ describe('useSpreadsheetImport hook', () => {
       addOccurrence: jest.fn(),
       addOccurrencesBatch: jest.fn().mockResolvedValue(5),
       deleteOccurrence: jest.fn(),
+      deleteOccurrencesByDateRange: jest.fn(),
       getByDate: jest.fn(),
       getAllOccurrences: jest.fn(),
       getOccurrencesByDateRange: jest.fn(),

@@ -43,4 +43,17 @@ describe('WebLocalStorageHymnRepository', () => {
     // Deve contar apenas 2 (1 do dia 02 e 1 do dia 03)
     expect(frequencies[0].distinctDaysCount).toBe(2);
   });
+  it('deve remover ocorrências por intervalo de datas preservando as demais', async () => {
+    await repository.addOccurrence({ hymnNumber: 10, date: '2026-09-01' });
+    await repository.addOccurrence({ hymnNumber: 20, date: '2026-09-15' });
+    await repository.addOccurrence({ hymnNumber: 30, date: '2026-09-20' });
+    await repository.addOccurrence({ hymnNumber: 40, date: '2026-10-01' });
+
+    const deleted = await repository.deleteOccurrencesByDateRange('2026-09-10', '2026-09-25');
+    expect(deleted).toBe(2);
+
+    const all = await repository.getAllOccurrences();
+    expect(all).toHaveLength(2);
+    expect(all.map(o => o.hymnNumber)).toEqual([10, 40]);
+  });
 });

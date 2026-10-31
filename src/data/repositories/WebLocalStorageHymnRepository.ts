@@ -82,6 +82,26 @@ export class WebLocalStorageHymnRepository implements IHymnRepository {
     return deleted;
   }
 
+  /**
+   * Remove todas as ocorrências de hinos dentro de um intervalo de datas (inclusive).
+   * 
+   * @param startDate Data inicial no formato YYYY-MM-DD
+   * @param endDate Data final no formato YYYY-MM-DD
+   * @returns Quantidade total de registros deletados
+   */
+  public async deleteOccurrencesByDateRange(
+    startDate: string,
+    endDate: string
+  ): Promise<number> {
+    const list = this.loadFromStorage();
+    const toKeep = list.filter(o => o.date < startDate || o.date > endDate);
+    const deletedCount = list.length - toKeep.length;
+    if (deletedCount > 0) {
+      this.persist(toKeep);
+    }
+    return deletedCount;
+  }
+
   public async getByDate(date: string): Promise<HymnOccurrence[]> {
     const list = this.loadFromStorage();
     return list.filter(o => o.date === date);

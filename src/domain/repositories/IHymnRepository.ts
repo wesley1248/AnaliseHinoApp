@@ -45,6 +45,15 @@ export interface IHymnRepository {
   deleteOccurrence(id: number): Promise<boolean>;
 
   /**
+   * Remove todas as ocorrências de hinos dentro de um intervalo de datas (inclusive).
+   * 
+   * @param startDate Data inicial no formato YYYY-MM-DD
+   * @param endDate Data final no formato YYYY-MM-DD
+   * @returns Quantidade total de registros deletados
+   */
+  deleteOccurrencesByDateRange(startDate: string, endDate: string): Promise<number>;
+
+  /**
    * Obtém todas as ocorrências registradas em uma data específica.
    * 
    * @param date Data no formato YYYY-MM-DD

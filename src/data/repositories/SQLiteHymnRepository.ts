@@ -105,6 +105,25 @@ export class SQLiteHymnRepository implements IHymnRepository {
   }
 
   /**
+   * Remove todas as ocorrências de hinos dentro de um intervalo de datas (inclusive).
+   * 
+   * @param startDate Data inicial no formato YYYY-MM-DD
+   * @param endDate Data final no formato YYYY-MM-DD
+   * @returns Quantidade total de registros deletados
+   */
+  public async deleteOccurrencesByDateRange(
+    startDate: string,
+    endDate: string
+  ): Promise<number> {
+    const query = `
+      DELETE FROM ${TABLE_HYMN_OCCURRENCES}
+      WHERE date >= ? AND date <= ?;
+    `;
+    const result = await this.db.runAsync(query, startDate, endDate);
+    return result.changes;
+  }
+
+  /**
    * Retorna as ocorrências registradas em uma data específica.
    */
   public async getByDate(date: string): Promise<HymnOccurrence[]> {

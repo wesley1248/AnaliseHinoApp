@@ -217,6 +217,42 @@ describe('SQLiteHymnRepository', () => {
     });
   });
 
+  describe('deleteOccurrencesByDateRange', () => {
+    it('deve remover apenas as ocorrências contidas dentro do intervalo e retornar a contagem exata', async () => {
+      // Arrange
+      mockDb.seedRows([
+        { hymn_number: 10, date: '2026-09-01' },
+        { hymn_number: 20, date: '2026-09-10' },
+        { hymn_number: 30, date: '2026-09-15' },
+        { hymn_number: 40, date: '2026-09-20' },
+        { hymn_number: 50, date: '2026-09-30' },
+      ]);
+
+      // Act
+      const deletedCount = await repository.deleteOccurrencesByDateRange('2026-09-10', '2026-09-20');
+
+      // Assert
+      expect(deletedCount).toBe(3);
+      const remaining = mockDb.getStoredRows();
+      expect(remaining).toHaveLength(2);
+      expect(remaining.map(r => r.hymn_number)).toEqual([10, 50]);
+    });
+
+    it('deve retornar 0 quando não houver ocorrências dentro do intervalo', async () => {
+      // Arrange
+      mockDb.seedRows([
+        { hymn_number: 10, date: '2026-08-01' },
+      ]);
+
+      // Act
+      const deletedCount = await repository.deleteOccurrencesByDateRange('2026-09-01', '2026-09-30');
+
+      // Assert
+      expect(deletedCount).toBe(0);
+      expect(mockDb.getStoredRows()).toHaveLength(1);
+    });
+  });
+
   describe('clearAll', () => {
     it('deve limpar todas as ocorrências armazenadas', async () => {
       // Arrange

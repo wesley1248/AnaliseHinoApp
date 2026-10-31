@@ -60,6 +60,7 @@ describe('useDashboard Hook', () => {
       addOccurrence: jest.fn(),
       addOccurrencesBatch: jest.fn(),
       deleteOccurrence: jest.fn(),
+      deleteOccurrencesByDateRange: jest.fn(),
       getByDate: jest.fn(),
       getAllOccurrences: jest.fn(),
       getOccurrencesByDateRange: jest.fn(),

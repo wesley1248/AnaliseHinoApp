@@ -47,6 +47,14 @@ export class MockSQLiteDatabase implements ISQLiteDatabase {
       return { lastInsertRowId: 0, changes };
     }
 
+    if (source.toUpperCase().includes('DELETE FROM HYMN_OCCURRENCES') && source.toUpperCase().includes('DATE >=') && source.toUpperCase().includes('DATE <=')) {
+      const [startDate, endDate] = params;
+      const initialLength = this.rows.length;
+      this.rows = this.rows.filter(r => r.date < String(startDate) || r.date > String(endDate));
+      const changes = initialLength - this.rows.length;
+      return { lastInsertRowId: 0, changes };
+    }
+
     if (source.toUpperCase().includes('DELETE FROM HYMN_OCCURRENCES')) {
       const changes = this.rows.length;
       this.rows = [];
