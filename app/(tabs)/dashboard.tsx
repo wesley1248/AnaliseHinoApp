@@ -3,13 +3,13 @@ import {
   ActivityIndicator,
   Platform,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDashboard } from '@/presentation/hooks/useDashboard';
 import {
   PeriodFilterSelector,
@@ -35,7 +35,7 @@ export default function DashboardScreen() {
   } = useDashboard();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -64,24 +64,24 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Filtro Dinâmico de Período Temporal */}
+        {/* Filtro Dinâmico de Período */}
         <PeriodFilterSelector
           selectedPeriod={period}
           onSelectPeriod={setPeriod}
         />
 
-        {/* Feedback de Carregamento Inicial */}
+        {/* Indicador de Carregamento */}
         {isLoading && frequencies.length === 0 ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#3B82F6" />
-            <Text style={styles.loadingText}>Calculando frequências...</Text>
+            <ActivityIndicator size="large" color="#2563EB" />
+            <Text style={styles.loadingText}>Calculando métricas do hinário...</Text>
           </View>
         ) : (
           <>
-            {/* Cartões de Métricas e KPIs */}
+            {/* Cards de Métricas Consolidada */}
             <DashboardMetricsCards metrics={metrics} />
 
-            {/* Ranking Ordenado de Frequência de Hinos */}
+            {/* Listagem de Hinos Mais Tocados */}
             <HymnRankingList frequencies={frequencies} />
           </>
         )}
@@ -94,7 +94,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#0F172A', // Slate 900
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0,
   },
   scrollContent: {
     paddingBottom: 40,

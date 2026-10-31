@@ -9,12 +9,12 @@ import React from 'react';
 import {
   ActivityIndicator,
   Platform,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useReports } from '@/presentation/hooks/useReports';
 import { PeriodFilterSelector } from '@/presentation/components/dashboard';
 import {
@@ -42,7 +42,7 @@ export default function RelatorioScreen() {
   } = useReports();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
       {/* Cabeçalho da Tela */}
@@ -101,8 +101,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#0F172A',
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0,
-  },
+      },
   header: {
     backgroundColor: '#0F172A',
     paddingHorizontal: 20,
