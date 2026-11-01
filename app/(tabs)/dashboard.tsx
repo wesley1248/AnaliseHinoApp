@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -35,11 +35,14 @@ export default function DashboardScreen() {
     refresh,
   } = useDashboard();
 
-  // Sincronização automática sempre que a aba Dashboard ganha foco
+  // Sincronização automática estritamente ao entrar em foco na aba
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+
   useFocusEffect(
     useCallback(() => {
-      refresh();
-    }, [refresh])
+      refreshRef.current();
+    }, [])
   );
 
   return (

@@ -270,6 +270,8 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
     deleteHymnsByRange,
     goToPreviousDay,
     goToNextDay,
-    refresh: () => loadHymnsForDate(selectedDate),
+    refresh: useCallback(async () => {
+      await loadHymnsForDate(selectedDate);
+    }, [loadHymnsForDate, selectedDate]),
   };
 }

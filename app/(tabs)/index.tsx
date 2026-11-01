@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   ScrollView,
@@ -37,11 +37,14 @@ export default function LancamentoScreen() {
     refresh,
   } = useDailyLaunch();
 
-  // Sincronização automática sempre que a aba Lançar ganha foco
+  // Sincronização automática estritamente ao entrar em foco na aba
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+
   useFocusEffect(
     useCallback(() => {
-      refresh();
-    }, [refresh])
+      refreshRef.current();
+    }, [])
   );
 
   const [isCalendarVisible, setIsCalendarVisible] = useState<boolean>(false);
