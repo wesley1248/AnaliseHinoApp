@@ -2,7 +2,7 @@
   "expo": {
     "name": "AnaliseHinosApp",
     "slug": "analise-hinos-app",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "analisehinos",
@@ -12,7 +12,7 @@
     },
     "android": {
       "package": "com.wesleytms.analisehinosapp",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#101F36"
