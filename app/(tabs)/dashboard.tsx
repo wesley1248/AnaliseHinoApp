@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Platform,
@@ -33,6 +34,13 @@ export default function DashboardScreen() {
     error,
     refresh,
   } = useDashboard();
+
+  // Sincronização automática sempre que a aba Dashboard ganha foco
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>

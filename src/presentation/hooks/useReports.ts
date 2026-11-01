@@ -11,6 +11,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { IHymnRepository } from '@/domain/repositories/IHymnRepository';
 import { getHymnRepository } from '@/data/repositories/getHymnRepository';
+import { dataSyncNotifier } from '@/domain/events/dataSyncEvents';
 import { HymnFrequency } from '@/domain/entities/HymnOccurrence';
 import { generateReportHtml, ReportItemData, ReportMetricsData } from '@/domain/services/reportHtmlGenerator';
 import { getPeriodDateRange, DashboardPeriod } from './useDashboard';
@@ -77,6 +78,14 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
 
   useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  // Sincronização automática em tempo real ao modificar dados em qualquer aba
+  useEffect(() => {
+    const unsubscribe = dataSyncNotifier.subscribe(() => {
+      loadData();
+    });
+    return unsubscribe;
   }, [loadData]);
 
   /**

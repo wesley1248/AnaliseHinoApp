@@ -5,7 +5,8 @@
  * filtrar a cobertura do hinário (480 hinos) e gerar documento HTML estilizado para impressão e compartilhamento PDF.
  */
 
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Platform,
@@ -39,7 +40,15 @@ export default function RelatorioScreen() {
     error,
     exportToPdf,
     printReport,
+    refresh,
   } = useReports();
+
+  // Sincronização automática sempre que a aba Relatórios ganha foco
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>

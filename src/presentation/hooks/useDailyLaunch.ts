@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { IHymnRepository } from '../../domain/repositories/IHymnRepository';
 import { HymnOccurrence } from '../../domain/entities/HymnOccurrence';
 import { getHymnRepository } from '../../data/repositories/getHymnRepository';
+import { dataSyncNotifier } from '../../domain/events/dataSyncEvents';
 
 /**
  * Opções de configuração para o hook useDailyLaunch.
@@ -104,6 +105,14 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
     loadHymnsForDate(selectedDate);
   }, [selectedDate, loadHymnsForDate]);
 
+  // Sincronização automática entre abas em tempo real
+  useEffect(() => {
+    const unsubscribe = dataSyncNotifier.subscribe(() => {
+      loadHymnsForDate(selectedDate);
+    });
+    return unsubscribe;
+  }, [selectedDate, loadHymnsForDate]);
+
   /**
    * Adiciona um dígito numérico ao buffer atual respeitando o limite oficial do hinário (1 a 480).
    */
@@ -171,6 +180,7 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
       setCurrentNumber('');
       triggerHapticFeedback();
       await loadHymnsForDate(selectedDate);
+      dataSyncNotifier.notify();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro ao salvar hino';
       setError(message);
@@ -189,6 +199,7 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
       await repo.deleteOccurrence(id);
       triggerHapticFeedback();
       await loadHymnsForDate(selectedDate);
+      dataSyncNotifier.notify();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro ao remover hino';
       setError(message);
@@ -233,6 +244,7 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
       if (selectedDate >= startDate && selectedDate <= endDate) {
         await loadHymnsForDate(selectedDate);
       }
+      dataSyncNotifier.notify();
       return count;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro ao excluir hinos por intervalo';

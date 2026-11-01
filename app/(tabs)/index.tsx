@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   ScrollView,
   StatusBar,
@@ -33,7 +34,15 @@ export default function LancamentoScreen() {
     deleteHymnsByRange,
     goToPreviousDay,
     goToNextDay,
+    refresh,
   } = useDailyLaunch();
+
+  // Sincronização automática sempre que a aba Lançar ganha foco
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   const [isCalendarVisible, setIsCalendarVisible] = useState<boolean>(false);
   const [isDeleteRangeVisible, setIsDeleteRangeVisible] = useState<boolean>(false);

@@ -1,3 +1,4 @@
+import { dataSyncNotifier } from '@/domain/events/dataSyncEvents';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useDashboard, getPeriodDateRange, DashboardPeriod } from '../useDashboard';
 import { IHymnRepository } from '@/domain/repositories/IHymnRepository';
@@ -153,5 +154,27 @@ describe('useDashboard Hook', () => {
     });
 
     expect(result.current.error).toBe('Falha no banco SQLite');
+  });
+  it('deve recarregar dados automaticamente quando houver notificacao global de sincronizacao', async () => {
+    const { result } = renderHook(() =>
+      useDashboard({
+        repository: mockRepo,
+        initialPeriod: 'todos',
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(mockRepo.getDeduplicatedFrequencies).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      dataSyncNotifier.notify();
+    });
+
+    await waitFor(() => {
+      expect(mockRepo.getDeduplicatedFrequencies).toHaveBeenCalledTimes(2);
+    });
   });
 });

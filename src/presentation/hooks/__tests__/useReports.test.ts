@@ -1,5 +1,6 @@
-import { renderHook, act } from '@testing-library/react-native';
+import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useReports } from '../useReports';
+import { dataSyncNotifier } from '@/domain/events/dataSyncEvents';
 import { IHymnRepository } from '../../../domain/repositories/IHymnRepository';
 import { HymnFrequency } from '../../../domain/entities/HymnOccurrence';
 
@@ -108,5 +109,22 @@ describe('useReports hook', () => {
 
     expect(result.current.reportItems.length).toBe(480 - 3);
     expect(result.current.reportItems.some((i) => i.hymnNumber === 43)).toBe(false);
+  });
+  it('deve recarregar dados automaticamente quando dataSyncNotifier notificar alteracao', async () => {
+    const { result } = renderHook(() => useReports({ repository: mockRepository }));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(mockRepository.getDeduplicatedFrequencies).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      dataSyncNotifier.notify();
+    });
+
+    await waitFor(() => {
+      expect(mockRepository.getDeduplicatedFrequencies).toHaveBeenCalledTimes(2);
+    });
   });
 });

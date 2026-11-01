@@ -11,6 +11,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as XLSX from 'xlsx';
 import { IHymnRepository } from '@/domain/repositories/IHymnRepository';
 import { getHymnRepository } from '@/data/repositories/getHymnRepository';
+import { dataSyncNotifier } from '@/domain/events/dataSyncEvents';
 import {
   parseSpreadsheetData,
   SpreadsheetParseResult,
@@ -154,6 +155,7 @@ export function useSpreadsheetImport(options?: IHymnRepository | UseSpreadsheetI
       const repo = await resolveRepository();
       const count = await repo.addOccurrencesBatch(parseResult.validRecords);
       setImportedCount(count);
+      dataSyncNotifier.notify();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao salvar registros no banco.';
       setError(msg);

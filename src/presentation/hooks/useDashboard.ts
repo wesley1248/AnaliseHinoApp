@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { HymnFrequency } from '@/domain/entities/HymnOccurrence';
 import { IHymnRepository } from '@/domain/repositories/IHymnRepository';
 import { getHymnRepository } from '@/data/repositories/getHymnRepository';
+import { dataSyncNotifier } from '@/domain/events/dataSyncEvents';
 
 /**
  * Períodos disponíveis para filtragem e análise no Dashboard.
@@ -130,6 +131,14 @@ export function useDashboard(options?: UseDashboardOptions) {
   // Carrega ao montar ou mudar o período
   useEffect(() => {
     loadData(period);
+  }, [period, loadData]);
+
+  // Sincronização automática em tempo real ao modificar dados em qualquer aba
+  useEffect(() => {
+    const unsubscribe = dataSyncNotifier.subscribe(() => {
+      loadData(period);
+    });
+    return unsubscribe;
   }, [period, loadData]);
 
   /**
