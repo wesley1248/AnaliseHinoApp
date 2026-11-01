@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20Mode-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Database](https://img.shields.io/badge/SQLite-Local--First%20(Offline)-003B57?style=flat&logo=sqlite)](https://docs.expo.dev/versions/latest/sdk/sqlite/)
 [![Tests](https://img.shields.io/badge/Tests-100%25%20Passing-success?style=flat&logo=jest)](https://jestjs.io/)
-[![Version](https://img.shields.io/badge/Version-1.0.3-blue?style=flat)](https://github.com/wesley1248/AnaliseHinoApp/releases/tag/v1.0.3)
+[![Version](https://img.shields.io/badge/Version-1.0.4-blue?style=flat)](https://github.com/wesley1248/AnaliseHinoApp/releases/tag/v1.0.4)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
