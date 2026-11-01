@@ -39,8 +39,17 @@ export class SQLiteHymnRepository implements IHymnRepository {
 
   /**
    * Adiciona um registro individual de execução de hino no banco local.
+   * Sanitiza os parâmetros para impedir que valores indefinidos alcancem o bridge nativo.
    */
   public async addOccurrence(input: CreateOccurrenceInput): Promise<HymnOccurrence> {
+    const hymnNumber = Number(input.hymnNumber);
+    const date = String(input.date || '').trim();
+    const notes = input.notes !== undefined && input.notes !== null ? String(input.notes).trim() : null;
+
+    if (!date || isNaN(hymnNumber) || hymnNumber <= 0) {
+      throw new Error(`Dados de ocorrência inválidos: número=${input.hymnNumber}, data=${input.date}`);
+    }
+
     const query = `
       INSERT INTO ${TABLE_HYMN_OCCURRENCES} (hymn_number, date, notes)
       VALUES (?, ?, ?);
@@ -48,22 +57,22 @@ export class SQLiteHymnRepository implements IHymnRepository {
 
     const result = await this.db.runAsync(
       query,
-      input.hymnNumber,
-      input.date,
-      input.notes ?? null
+      hymnNumber,
+      date,
+      notes
     );
 
     const created = await this.db.getFirstAsync<HymnOccurrenceRow>(
       `SELECT * FROM ${TABLE_HYMN_OCCURRENCES} WHERE id = ?;`,
-      result.lastInsertRowId
+      Number(result.lastInsertRowId)
     );
 
     if (!created) {
       return {
         id: result.lastInsertRowId,
-        hymnNumber: input.hymnNumber,
-        date: input.date,
-        notes: input.notes,
+        hymnNumber,
+        date,
+        notes: notes ?? undefined,
         createdAt: new Date().toISOString(),
       };
     }
@@ -73,6 +82,7 @@ export class SQLiteHymnRepository implements IHymnRepository {
 
   /**
    * Adiciona um lote de hinos dentro de uma única transação atômica.
+   * Sanitiza cada item individualmente para prevenir NullPointerExceptions nativos.
    */
   public async addOccurrencesBatch(inputs: CreateOccurrenceInput[]): Promise<number> {
     if (!inputs || inputs.length === 0) {
@@ -87,8 +97,14 @@ export class SQLiteHymnRepository implements IHymnRepository {
       `;
 
       for (const item of inputs) {
-        await this.db.runAsync(query, item.hymnNumber, item.date, item.notes ?? null);
-        insertedCount++;
+        const hymnNumber = Number(item.hymnNumber);
+        const date = String(item.date || '').trim();
+        const notes = item.notes !== undefined && item.notes !== null ? String(item.notes).trim() : null;
+
+        if (date && !isNaN(hymnNumber) && hymnNumber > 0) {
+          await this.db.runAsync(query, hymnNumber, date, notes);
+          insertedCount++;
+        }
       }
     });
 
@@ -97,10 +113,15 @@ export class SQLiteHymnRepository implements IHymnRepository {
 
   /**
    * Remove uma ocorrência pelo seu identificador único.
+   * Valida o identificador numérico antes de interagir com o SQLite.
    */
   public async deleteOccurrence(id: number): Promise<boolean> {
+    const validId = Number(id);
+    if (isNaN(validId) || validId <= 0) {
+      return false;
+    }
     const query = `DELETE FROM ${TABLE_HYMN_OCCURRENCES} WHERE id = ?;`;
-    const result = await this.db.runAsync(query, id);
+    const result = await this.db.runAsync(query, validId);
     return result.changes > 0;
   }
 
@@ -115,24 +136,34 @@ export class SQLiteHymnRepository implements IHymnRepository {
     startDate: string,
     endDate: string
   ): Promise<number> {
+    const safeStart = String(startDate || '').trim();
+    const safeEnd = String(endDate || '').trim();
+    if (!safeStart || !safeEnd) {
+      return 0;
+    }
     const query = `
       DELETE FROM ${TABLE_HYMN_OCCURRENCES}
       WHERE date >= ? AND date <= ?;
     `;
-    const result = await this.db.runAsync(query, startDate, endDate);
+    const result = await this.db.runAsync(query, safeStart, safeEnd);
     return result.changes;
   }
 
   /**
    * Retorna as ocorrências registradas em uma data específica.
+   * Retorna array vazio imediatamente se a data fornecida for vazia ou inválida.
    */
   public async getByDate(date: string): Promise<HymnOccurrence[]> {
+    const safeDate = String(date || '').trim();
+    if (!safeDate) {
+      return [];
+    }
     const query = `
       SELECT * FROM ${TABLE_HYMN_OCCURRENCES}
       WHERE date = ?
       ORDER BY id ASC;
     `;
-    const rows = await this.db.getAllAsync<HymnOccurrenceRow>(query, date);
+    const rows = await this.db.getAllAsync<HymnOccurrenceRow>(query, safeDate);
     return rows.map(r => this.mapRowToEntity(r));
   }
 
@@ -155,12 +186,17 @@ export class SQLiteHymnRepository implements IHymnRepository {
     startDate: string,
     endDate: string
   ): Promise<HymnOccurrence[]> {
+    const safeStart = String(startDate || '').trim();
+    const safeEnd = String(endDate || '').trim();
+    if (!safeStart || !safeEnd) {
+      return [];
+    }
     const query = `
       SELECT * FROM ${TABLE_HYMN_OCCURRENCES}
       WHERE date >= ? AND date <= ?
       ORDER BY date ASC, id ASC;
     `;
-    const rows = await this.db.getAllAsync<HymnOccurrenceRow>(query, startDate, endDate);
+    const rows = await this.db.getAllAsync<HymnOccurrenceRow>(query, safeStart, safeEnd);
     return rows.map(r => this.mapRowToEntity(r));
   }
 
@@ -173,8 +209,11 @@ export class SQLiteHymnRepository implements IHymnRepository {
   ): Promise<HymnFrequency[]> {
     let occurrences: HymnOccurrence[];
 
-    if (startDate && endDate) {
-      occurrences = await this.getOccurrencesByDateRange(startDate, endDate);
+    const safeStart = startDate ? String(startDate).trim() : undefined;
+    const safeEnd = endDate ? String(endDate).trim() : undefined;
+
+    if (safeStart && safeEnd) {
+      occurrences = await this.getOccurrencesByDateRange(safeStart, safeEnd);
     } else {
       occurrences = await this.getAllOccurrences();
     }

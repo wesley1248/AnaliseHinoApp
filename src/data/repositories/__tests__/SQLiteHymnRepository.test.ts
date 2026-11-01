@@ -268,4 +268,49 @@ describe('SQLiteHymnRepository', () => {
       expect(mockDb.getStoredRows()).toHaveLength(0);
     });
   });
+
+  describe('Sanitização e Blindagem contra Parâmetros Inválidos (NullPointer Safety)', () => {
+    it('deve retornar array vazio ao chamar getByDate com data vazia sem executar consulta no banco', async () => {
+      // Act
+      const result = await repository.getByDate('');
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('deve retornar 0 ao chamar deleteOccurrencesByDateRange com datas vazias sem executar no banco', async () => {
+      // Act
+      const result = await repository.deleteOccurrencesByDateRange('', '');
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('deve retornar false ao chamar deleteOccurrence com ID inválido sem executar no banco', async () => {
+      // Act
+      const result = await repository.deleteOccurrence(0);
+      const resultNaN = await repository.deleteOccurrence(NaN);
+
+      // Assert
+      expect(result).toBe(false);
+      expect(resultNaN).toBe(false);
+    });
+
+    it('deve lançar erro descritivo ao tentar addOccurrence com número inválido ou data vazia', async () => {
+      // Act & Assert
+      await expect(repository.addOccurrence({ hymnNumber: 0, date: '2026-10-01' }))
+        .rejects.toThrow('Dados de ocorrência inválidos');
+
+      await expect(repository.addOccurrence({ hymnNumber: 10, date: '' }))
+        .rejects.toThrow('Dados de ocorrência inválidos');
+    });
+
+    it('deve retornar array vazio ao chamar getOccurrencesByDateRange com datas incompletas', async () => {
+      // Act
+      const result = await repository.getOccurrencesByDateRange('', '2026-10-01');
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+  });
 });

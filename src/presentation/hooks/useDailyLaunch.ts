@@ -86,6 +86,7 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
    * Carrega os hinos registrados para a data selecionada.
    */
   const loadHymnsForDate = useCallback(async (dateToLoad: string) => {
+    if (!dateToLoad) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -100,18 +101,62 @@ export function useDailyLaunch(options?: UseDailyLaunchOptions) {
     }
   }, [resolveRepository]);
 
-  // Carrega ao montar ou alterar a data
+  // Carrega ao montar ou alterar a data com descarte de respostas obsoletas (anti-race condition)
   useEffect(() => {
-    loadHymnsForDate(selectedDate);
-  }, [selectedDate, loadHymnsForDate]);
+    let isCurrent = true;
+
+    const executeLoad = async () => {
+      if (!selectedDate) return;
+      setIsLoading(true);
+      setError(null);
+      try {
+        const repo = await resolveRepository();
+        const list = await repo.getByDate(selectedDate);
+        if (isCurrent) {
+          setHymnsToday(list);
+        }
+      } catch (err: unknown) {
+        if (isCurrent) {
+          const message = err instanceof Error ? err.message : 'Erro ao carregar hinos';
+          setError(message);
+        }
+      } finally {
+        if (isCurrent) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    executeLoad();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedDate, resolveRepository]);
 
   // Sincronização automática entre abas em tempo real
   useEffect(() => {
-    const unsubscribe = dataSyncNotifier.subscribe(() => {
-      loadHymnsForDate(selectedDate);
+    let isCurrent = true;
+    const unsubscribe = dataSyncNotifier.subscribe(async () => {
+      if (!selectedDate || !isCurrent) return;
+      try {
+        const repo = await resolveRepository();
+        const list = await repo.getByDate(selectedDate);
+        if (isCurrent) {
+          setHymnsToday(list);
+        }
+      } catch (err: unknown) {
+        if (isCurrent) {
+          const message = err instanceof Error ? err.message : 'Erro ao carregar hinos';
+          setError(message);
+        }
+      }
     });
-    return unsubscribe;
-  }, [selectedDate, loadHymnsForDate]);
+    return () => {
+      isCurrent = false;
+      unsubscribe();
+    };
+  }, [selectedDate, resolveRepository]);
 
   /**
    * Adiciona um dígito numérico ao buffer atual respeitando o limite oficial do hinário (1 a 480).
