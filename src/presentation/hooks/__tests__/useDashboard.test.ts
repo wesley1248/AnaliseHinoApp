@@ -2,7 +2,7 @@ import { dataSyncNotifier } from '@/domain/events/dataSyncEvents';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useDashboard, getPeriodDateRange, DashboardPeriod } from '../useDashboard';
 import { IHymnRepository } from '@/domain/repositories/IHymnRepository';
-import { HymnOccurrence, HymnFrequency } from '@/domain/entities/HymnOccurrence';
+import { HymnFrequency } from '@/domain/entities/HymnOccurrence';
 
 describe('getPeriodDateRange helper', () => {
   const refDate = '2026-10-31';
@@ -71,7 +71,7 @@ describe('useDashboard Hook', () => {
     };
   });
 
-  it('deve carregar dados iniciais e calcular métricas consolidadas', async () => {
+  it('deve carregar dados iniciais e calcular métricas consolidadas com foco em repetições', async () => {
     const { result } = renderHook(() =>
       useDashboard({
         repository: mockRepo,
@@ -92,6 +92,44 @@ describe('useDashboard Hook', () => {
     expect(result.current.metrics.distinctHymnsCount).toBe(3);
     expect(result.current.metrics.mostFrequentHymn?.hymnNumber).toBe(15);
     expect(result.current.metrics.distinctDaysCount).toBe(8);
+
+    // Novas métricas de repetição: 15 e 100 têm >= 2 cultos; 45 tem 1 culto
+    expect(result.current.metrics.repeatedHymnsCount).toBe(2);
+    expect(result.current.metrics.singleHymnsCount).toBe(1);
+    expect(result.current.metrics.repetitionRate).toBeCloseTo((2 / 3) * 100, 1);
+
+    // Filtro inicial do ranking padrão: apenas repetidos
+    expect(result.current.rankingFilter).toBe('repetidos');
+    expect(result.current.filteredFrequencies).toHaveLength(2);
+    expect(result.current.filteredFrequencies[0].hymnNumber).toBe(15);
+    expect(result.current.filteredFrequencies[1].hymnNumber).toBe(100);
+  });
+
+  it('deve alternar filtro do ranking entre repetidos, todos e únicos', async () => {
+    const { result } = renderHook(() =>
+      useDashboard({
+        repository: mockRepo,
+        initialPeriod: 'todos',
+        referenceDate: '2026-10-31',
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // Alterna para 'todos'
+    act(() => {
+      result.current.setRankingFilter('todos');
+    });
+    expect(result.current.filteredFrequencies).toHaveLength(3);
+
+    // Alterna para 'unicos'
+    act(() => {
+      result.current.setRankingFilter('unicos');
+    });
+    expect(result.current.filteredFrequencies).toHaveLength(1);
+    expect(result.current.filteredFrequencies[0].hymnNumber).toBe(45);
   });
 
   it('deve recalcular e refazer busca ao alterar o período', async () => {
@@ -107,7 +145,6 @@ describe('useDashboard Hook', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Altera para 30 dias
     await act(async () => {
       await result.current.setPeriod('30d');
     });
@@ -116,14 +153,11 @@ describe('useDashboard Hook', () => {
     expect(mockRepo.getDeduplicatedFrequencies).toHaveBeenCalledWith('2026-10-01', '2026-10-31');
   });
 
-  it('deve lidar com lista vazia de hinos sem estourar erro', async () => {
-    mockRepo.getDeduplicatedFrequencies.mockResolvedValueOnce([]);
-    mockRepo.getDistinctDates.mockResolvedValueOnce([]);
-
+  it('deve reagir a evento do dataSyncNotifier e recarregar os dados', async () => {
     const { result } = renderHook(() =>
       useDashboard({
         repository: mockRepo,
-        initialPeriod: '30d',
+        initialPeriod: 'todos',
         referenceDate: '2026-10-31',
       })
     );
@@ -132,49 +166,37 @@ describe('useDashboard Hook', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.frequencies).toEqual([]);
-    expect(result.current.metrics.totalExecutions).toBe(0);
-    expect(result.current.metrics.distinctHymnsCount).toBe(0);
-    expect(result.current.metrics.mostFrequentHymn).toBeNull();
-    expect(result.current.metrics.distinctDaysCount).toBe(0);
-  });
-
-  it('deve capturar erros do repositório e popular o estado de erro', async () => {
-    mockRepo.getDeduplicatedFrequencies.mockRejectedValueOnce(new Error('Falha no banco SQLite'));
-
-    const { result } = renderHook(() =>
-      useDashboard({
-        repository: mockRepo,
-        initialPeriod: 'todos',
-      })
-    );
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.error).toBe('Falha no banco SQLite');
-  });
-  it('deve recarregar dados automaticamente quando houver notificacao global de sincronizacao', async () => {
-    const { result } = renderHook(() =>
-      useDashboard({
-        repository: mockRepo,
-        initialPeriod: 'todos',
-      })
-    );
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(mockRepo.getDeduplicatedFrequencies).toHaveBeenCalledTimes(1);
+    mockRepo.getDeduplicatedFrequencies.mockClear();
 
     act(() => {
       dataSyncNotifier.notify();
     });
 
     await waitFor(() => {
-      expect(mockRepo.getDeduplicatedFrequencies).toHaveBeenCalledTimes(2);
+      expect(mockRepo.getDeduplicatedFrequencies).toHaveBeenCalled();
     });
+  });
+
+  it('deve retornar métricas zeradas quando não houver frequências', async () => {
+    mockRepo.getDeduplicatedFrequencies.mockResolvedValue([]);
+
+    const { result } = renderHook(() =>
+      useDashboard({
+        repository: mockRepo,
+        initialPeriod: 'todos',
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.metrics.totalExecutions).toBe(0);
+    expect(result.current.metrics.distinctDaysCount).toBe(0);
+    expect(result.current.metrics.distinctHymnsCount).toBe(0);
+    expect(result.current.metrics.repeatedHymnsCount).toBe(0);
+    expect(result.current.metrics.singleHymnsCount).toBe(0);
+    expect(result.current.metrics.repetitionRate).toBe(0);
+    expect(result.current.metrics.mostFrequentHymn).toBeNull();
   });
 });

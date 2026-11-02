@@ -1,8 +1,8 @@
 /**
  * @file useReports.ts
  * @description Hook responsável pela orquestração do carregamento de dados de relatório,
- * filtros por período, ordenação estatística, cálculo de cobertura do hinário (480 hinos)
- * e geração/compartilhamento de relatórios em formato PDF e impressão.
+ * filtros por período, foco em hinos repetidos (>= 2 cultos), ordenação estatística,
+ * cálculo de cobertura do hinário (480 hinos) e geração/compartilhamento de relatórios em formato PDF e impressão.
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -18,13 +18,14 @@ import { getPeriodDateRange, DashboardPeriod } from './useDashboard';
 
 export type ReportPeriod = DashboardPeriod;
 export type ReportSortOption = 'mais_tocados' | 'menos_tocados' | 'numero_hino';
-export type ReportFilterMode = 'apenas_tocados' | 'todos' | 'nunca_tocados';
+export type ReportFilterMode = 'apenas_repetidos' | 'apenas_tocados' | 'todos' | 'nunca_tocados';
 
 export const TOTAL_HYMNS_IN_HYMNAL = 480;
 
 export interface UseReportsOptions {
   repository?: IHymnRepository;
   initialPeriod?: ReportPeriod;
+  initialFilterMode?: ReportFilterMode;
   referenceDate?: string;
 }
 
@@ -44,7 +45,9 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
 
   const [period, setPeriod] = useState<ReportPeriod>(resolvedOptions.initialPeriod ?? '30d');
   const [sortOption, setSortOption] = useState<ReportSortOption>('mais_tocados');
-  const [filterMode, setFilterMode] = useState<ReportFilterMode>('apenas_tocados');
+  const [filterMode, setFilterMode] = useState<ReportFilterMode>(
+    resolvedOptions.initialFilterMode ?? 'apenas_repetidos'
+  );
   const [frequencies, setFrequencies] = useState<HymnFrequency[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -103,12 +106,14 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
     const distinctDaysCount = allDates.size;
     const distinctHymnsCount = frequencies.length;
     const neverPlayedCount = Math.max(0, TOTAL_HYMNS_IN_HYMNAL - distinctHymnsCount);
+    const repeatedHymnsCount = frequencies.filter((f) => f.distinctDaysCount >= 2).length;
 
     return {
       distinctDaysCount,
       totalExecutions,
       distinctHymnsCount,
       neverPlayedCount,
+      repeatedHymnsCount,
     };
   }, [frequencies]);
 
@@ -123,12 +128,22 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
 
     let items: ReportItemData[] = [];
 
-    if (filterMode === 'apenas_tocados') {
+    if (filterMode === 'apenas_repetidos') {
+      const repeated = frequencies.filter((f) => f.distinctDaysCount >= 2);
+      items = repeated.map((f) => ({
+        hymnNumber: f.hymnNumber,
+        distinctDaysCount: f.distinctDaysCount,
+        totalExecutions: f.totalExecutionsCount,
+        percentageOfDays: (f.distinctDaysCount / totalDays) * 100,
+        dates: f.dates,
+      }));
+    } else if (filterMode === 'apenas_tocados') {
       items = frequencies.map((f) => ({
         hymnNumber: f.hymnNumber,
         distinctDaysCount: f.distinctDaysCount,
         totalExecutions: f.totalExecutionsCount,
         percentageOfDays: (f.distinctDaysCount / totalDays) * 100,
+        dates: f.dates,
       }));
     } else if (filterMode === 'nunca_tocados') {
       const unplayed: ReportItemData[] = [];
@@ -139,6 +154,7 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
             distinctDaysCount: 0,
             totalExecutions: 0,
             percentageOfDays: 0,
+            dates: [],
           });
         }
       }
@@ -153,6 +169,7 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
           distinctDaysCount: f ? f.distinctDaysCount : 0,
           totalExecutions: f ? f.totalExecutionsCount : 0,
           percentageOfDays: f ? (f.distinctDaysCount / totalDays) * 100 : 0,
+          dates: f ? f.dates : [],
         });
       }
       items = all;
@@ -198,35 +215,46 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
     const generatedAt = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 
     return generateReportHtml({
-      title: 'Relatório de Frequência de Hinos',
-      subtitle: 'Controle Congregacional de Hinos Cantados',
+      title: 'Relatório Analítico de Frequência de Hinos',
+      subtitle: 'Controle de Repetições e Desduplicação Diária',
       periodLabel,
       generatedAt,
       metrics,
       items: reportItems,
     });
-  }, [period, resolvedOptions.referenceDate, metrics, reportItems]);
+  }, [period, metrics, reportItems, resolvedOptions.referenceDate]);
 
   /**
-   * Exporta o relatório como PDF e aciona o compartilhamento nativo.
+   * Exporta o relatório gerando um arquivo PDF e abrindo o menu de compartilhamento.
    */
   const exportToPdf = useCallback(async () => {
     setIsExporting(true);
+    setError(null);
     try {
       const html = getCompiledHtml();
 
       if (Platform.OS === 'web') {
-        await Print.printAsync({ html });
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(html);
+          printWindow.document.close();
+          printWindow.focus();
+          printWindow.print();
+        }
         return;
       }
 
-      const { uri } = await Print.printToFileAsync({ html });
+      const { uri } = await Print.printToFileAsync({
+        html,
+        base64: false,
+      });
 
-      if (await Sharing.isAvailableAsync()) {
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
         await Sharing.shareAsync(uri, {
-          UTI: '.pdf',
           mimeType: 'application/pdf',
-          dialogTitle: 'Compartilhar Relatório de Hinos',
+          dialogTitle: 'Exportar Relatório de Hinos',
+          UTI: 'com.adobe.pdf',
         });
       }
     } catch (err: unknown) {
@@ -238,12 +266,25 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
   }, [getCompiledHtml]);
 
   /**
-   * Abre a caixa de diálogo de impressão direta do sistema.
+   * Dispara a impressão direta do relatório utilizando o driver do sistema operacional.
    */
   const printReport = useCallback(async () => {
     setIsExporting(true);
+    setError(null);
     try {
       const html = getCompiledHtml();
+
+      if (Platform.OS === 'web') {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(html);
+          printWindow.document.close();
+          printWindow.focus();
+          printWindow.print();
+        }
+        return;
+      }
+
       await Print.printAsync({ html });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao imprimir relatório.';
@@ -252,6 +293,13 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
       setIsExporting(false);
     }
   }, [getCompiledHtml]);
+
+  /**
+   * Atualiza manualmente os dados do relatório.
+   */
+  const refresh = useCallback(async () => {
+    await loadData();
+  }, [loadData]);
 
   return {
     period,
@@ -265,8 +313,8 @@ export function useReports(options?: IHymnRepository | UseReportsOptions) {
     isLoading,
     isExporting,
     error,
-    refresh: loadData,
     exportToPdf,
     printReport,
+    refresh,
   };
 }
