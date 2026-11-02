@@ -10,6 +10,11 @@ import { dataSyncNotifier } from '@/domain/events/dataSyncEvents';
 export type DashboardPeriod = '30d' | '90d' | 'ano' | 'todos';
 
 /**
+ * Modos de visualização do ranking de hinos.
+ */
+export type DashboardRankingFilter = 'repetidos' | 'todos' | 'unicos';
+
+/**
  * Resumo consolidado de métricas do repertório de hinos para o período selecionado.
  */
 export interface DashboardMetrics {
@@ -21,6 +26,12 @@ export interface DashboardMetrics {
   mostFrequentHymn: HymnFrequency | null;
   /** Quantidade de hinos distintos já executados no período */
   distinctHymnsCount: number;
+  /** Quantidade de hinos que se repetiram (cantados em 2 ou mais cultos) */
+  repeatedHymnsCount: number;
+  /** Quantidade de hinos cantados em apenas 1 culto no período */
+  singleHymnsCount: number;
+  /** Taxa percentual de repetição no período (% dos hinos tocados que repetiram) */
+  repetitionRate: number;
 }
 
 /**
@@ -31,6 +42,8 @@ export interface UseDashboardOptions {
   repository?: IHymnRepository;
   /** Período inicial de visualização (padrão: 'todos') */
   initialPeriod?: DashboardPeriod;
+  /** Modo de filtro inicial do ranking (padrão: 'repetidos') */
+  initialRankingFilter?: DashboardRankingFilter;
   /** Data base de referência no formato ISO YYYY-MM-DD (padrão: hoje) */
   referenceDate?: string;
 }
@@ -90,10 +103,13 @@ export function getPeriodDateRange(
  * Hook customizado responsável pelo gerenciamento de estado e consultas do Dashboard.
  * 
  * Orquestra os filtros de período temporal, consultas de desduplicação diária
- * e cálculo das métricas de repertório (total de execuções, hino mais tocado e cultos únicos).
+ * e cálculo das métricas de repertório e hinos repetidos (>= 2 cultos).
  */
 export function useDashboard(options?: UseDashboardOptions) {
   const [period, setPeriod] = useState<DashboardPeriod>(options?.initialPeriod || 'todos');
+  const [rankingFilter, setRankingFilter] = useState<DashboardRankingFilter>(
+    options?.initialRankingFilter || 'repetidos'
+  );
   const [frequencies, setFrequencies] = useState<HymnFrequency[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,6 +167,9 @@ export function useDashboard(options?: UseDashboardOptions) {
         distinctDaysCount: 0,
         mostFrequentHymn: null,
         distinctHymnsCount: 0,
+        repeatedHymnsCount: 0,
+        singleHymnsCount: 0,
+        repetitionRate: 0,
       };
     }
 
@@ -166,13 +185,37 @@ export function useDashboard(options?: UseDashboardOptions) {
       }
     }
 
+    const repeatedHymns = frequencies.filter((f) => f.distinctDaysCount >= 2);
+    const repeatedHymnsCount = repeatedHymns.length;
+    const singleHymnsCount = frequencies.filter((f) => f.distinctDaysCount === 1).length;
+    const distinctHymnsCount = frequencies.length;
+    const repetitionRate = distinctHymnsCount > 0
+      ? (repeatedHymnsCount / distinctHymnsCount) * 100
+      : 0;
+
     return {
       totalExecutions,
       distinctDaysCount: allDates.size,
       mostFrequentHymn: frequencies[0] ?? null,
-      distinctHymnsCount: frequencies.length,
+      distinctHymnsCount,
+      repeatedHymnsCount,
+      singleHymnsCount,
+      repetitionRate,
     };
   }, [frequencies]);
+
+  /**
+   * Lista filtrada de frequências de acordo com o modo selecionado (repetidos, todos, únicos).
+   */
+  const filteredFrequencies = useMemo(() => {
+    if (rankingFilter === 'repetidos') {
+      return frequencies.filter((f) => f.distinctDaysCount >= 2);
+    }
+    if (rankingFilter === 'unicos') {
+      return frequencies.filter((f) => f.distinctDaysCount === 1);
+    }
+    return frequencies;
+  }, [frequencies, rankingFilter]);
 
   /**
    * Altera o período de análise e dispara nova consulta.
@@ -191,8 +234,11 @@ export function useDashboard(options?: UseDashboardOptions) {
   return {
     period,
     setPeriod: handleSetPeriod,
+    rankingFilter,
+    setRankingFilter,
     metrics,
     frequencies,
+    filteredFrequencies,
     isLoading,
     error,
     refresh,

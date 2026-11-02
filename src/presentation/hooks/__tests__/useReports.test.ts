@@ -26,6 +26,12 @@ describe('useReports hook', () => {
       totalExecutionsCount: 3,
       dates: ['2026-10-02', '2026-10-08', '2026-10-12'],
     },
+    {
+      hymnNumber: 50,
+      distinctDaysCount: 1,
+      totalExecutionsCount: 1,
+      dates: ['2026-10-02'],
+    },
   ];
 
   beforeEach(() => {
@@ -52,16 +58,43 @@ describe('useReports hook', () => {
     };
   });
 
-  it('deve carregar os dados e calcular métricas consolidadas', async () => {
+  it('deve carregar os dados e calcular métricas consolidadas incluindo hinos repetidos', async () => {
     const { result } = renderHook(() => useReports(mockRepository));
 
     await act(async () => {});
 
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.metrics.totalExecutions).toBe(11); // 6 + 2 + 3
-    expect(result.current.metrics.distinctHymnsCount).toBe(3);
-    expect(result.current.metrics.neverPlayedCount).toBe(480 - 3);
-    expect(result.current.metrics.distinctDaysCount).toBe(8); // datas únicas entre os hinos retornados
+    expect(result.current.metrics.totalExecutions).toBe(12); // 6 + 2 + 3 + 1
+    expect(result.current.metrics.distinctHymnsCount).toBe(4);
+    expect(result.current.metrics.neverPlayedCount).toBe(480 - 4);
+    expect(result.current.metrics.distinctDaysCount).toBe(8);
+    // Hinos 43 (5), 100 (2), 15 (3) são repetidos (>= 2). Hino 50 (1) não é.
+    expect(result.current.metrics.repeatedHymnsCount).toBe(3);
+  });
+
+  it('deve filtrar apenas hinos repetidos por padrão (filterMode: apenas_repetidos)', async () => {
+    const { result } = renderHook(() => useReports(mockRepository));
+    await act(async () => {});
+
+    expect(result.current.filterMode).toBe('apenas_repetidos');
+    expect(result.current.reportItems.length).toBe(3);
+    const hymnNumbers = result.current.reportItems.map((i) => i.hymnNumber);
+    expect(hymnNumbers).toContain(43);
+    expect(hymnNumbers).toContain(15);
+    expect(hymnNumbers).toContain(100);
+    expect(hymnNumbers).not.toContain(50);
+  });
+
+  it('deve listar todos cantados ao mudar filterMode para "apenas_tocados"', async () => {
+    const { result } = renderHook(() => useReports(mockRepository));
+    await act(async () => {});
+
+    act(() => {
+      result.current.setFilterMode('apenas_tocados');
+    });
+
+    expect(result.current.reportItems.length).toBe(4);
+    expect(result.current.reportItems.some((i) => i.hymnNumber === 50)).toBe(true);
   });
 
   it('deve ordenar por mais tocados por padrão', async () => {
@@ -99,7 +132,7 @@ describe('useReports hook', () => {
     expect(result.current.reportItems.length).toBe(480);
   });
 
-  it('deve filtrar apenas hinos nunca tocados quando filterMode for "nunca_tocados"', async () => {
+  it('deve incluir apenas nunca tocados quando filterMode for "nunca_tocados"', async () => {
     const { result } = renderHook(() => useReports(mockRepository));
     await act(async () => {});
 
@@ -107,24 +140,22 @@ describe('useReports hook', () => {
       result.current.setFilterMode('nunca_tocados');
     });
 
-    expect(result.current.reportItems.length).toBe(480 - 3);
+    expect(result.current.reportItems.length).toBe(480 - 4);
     expect(result.current.reportItems.some((i) => i.hymnNumber === 43)).toBe(false);
   });
-  it('deve recarregar dados automaticamente quando dataSyncNotifier notificar alteracao', async () => {
-    const { result } = renderHook(() => useReports({ repository: mockRepository }));
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
+  it('deve reagir à emissão de dataSyncNotifier.notify()', async () => {
+    const { result } = renderHook(() => useReports(mockRepository));
+    await act(async () => {});
 
-    expect(mockRepository.getDeduplicatedFrequencies).toHaveBeenCalledTimes(1);
+    mockRepository.getDeduplicatedFrequencies.mockClear();
 
     act(() => {
       dataSyncNotifier.notify();
     });
 
     await waitFor(() => {
-      expect(mockRepository.getDeduplicatedFrequencies).toHaveBeenCalledTimes(2);
+      expect(mockRepository.getDeduplicatedFrequencies).toHaveBeenCalled();
     });
   });
 });

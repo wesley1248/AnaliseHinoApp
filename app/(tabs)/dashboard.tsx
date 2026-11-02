@@ -2,16 +2,18 @@ import React, { useCallback, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
-  Platform,
   RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useDashboard } from '@/presentation/hooks/useDashboard';
+import { useTour } from '@/presentation/context/TourContext';
 import {
   PeriodFilterSelector,
   DashboardMetricsCards,
@@ -28,12 +30,16 @@ export default function DashboardScreen() {
   const {
     period,
     setPeriod,
+    rankingFilter,
+    setRankingFilter,
     metrics,
     frequencies,
     isLoading,
     error,
     refresh,
   } = useDashboard();
+
+  const { openTour } = useTour();
 
   // Sincronização automática estritamente ao entrar em foco na aba
   const refreshRef = useRef(refresh);
@@ -60,12 +66,25 @@ export default function DashboardScreen() {
           />
         }
       >
-        {/* Cabeçalho da Tela */}
+        {/* Cabeçalho da Tela com Botão de Tour */}
         <View style={styles.header}>
-          <Text style={styles.title}>Dashboard</Text>
-          <Text style={styles.subtitle}>
-            Frequência e métricas com desduplicação diária
-          </Text>
+          <View style={styles.headerTitleRow}>
+            <View style={styles.titleColumn}>
+              <Text style={styles.title}>Dashboard</Text>
+              <Text style={styles.subtitle}>
+                Frequência e métricas com foco em repetições
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.tourButton}
+              onPress={openTour}
+              activeOpacity={0.7}
+              accessibilityLabel="Rever tour e guia do aplicativo"
+            >
+              <Ionicons name="compass-outline" size={16} color="#60A5FA" />
+              <Text style={styles.tourButtonText}>Tour</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Banner de Erro caso ocorra falha */}
@@ -92,8 +111,12 @@ export default function DashboardScreen() {
             {/* Cards de Métricas Consolidada */}
             <DashboardMetricsCards metrics={metrics} />
 
-            {/* Listagem de Hinos Mais Tocados */}
-            <HymnRankingList frequencies={frequencies} />
+            {/* Listagem de Hinos Mais Tocados com Filtros de Repetição */}
+            <HymnRankingList
+              frequencies={frequencies}
+              rankingFilter={rankingFilter}
+              onSelectRankingFilter={setRankingFilter}
+            />
           </>
         )}
       </ScrollView>
@@ -114,6 +137,15 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 16,
   },
+  headerTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  titleColumn: {
+    flex: 1,
+    paddingRight: 10,
+  },
   title: {
     fontSize: 26,
     fontWeight: '800',
@@ -121,9 +153,25 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#94A3B8',
     marginTop: 4,
+  },
+  tourButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  tourButtonText: {
+    color: '#60A5FA',
+    fontSize: 12,
+    fontWeight: '700',
   },
   errorBanner: {
     marginHorizontal: 20,

@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20Mode-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Database](https://img.shields.io/badge/SQLite-Local--First%20(Offline)-003B57?style=flat&logo=sqlite)](https://docs.expo.dev/versions/latest/sdk/sqlite/)
 [![Tests](https://img.shields.io/badge/Tests-100%25%20Passing-success?style=flat&logo=jest)](https://jestjs.io/)
-[![Version](https://img.shields.io/badge/Version-1.0.4-blue?style=flat)](https://github.com/wesley1248/AnaliseHinoApp/releases/tag/v1.0.4)
+[![Version](https://img.shields.io/badge/Version-1.0.5-blue?style=flat)](https://github.com/wesley1248/AnaliseHinoApp/releases/tag/v1.0.5)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -61,26 +61,27 @@ O aplicativo foi projetado para atender regentes, líderes de louvor, músicos e
   * Notificador de eventos em tempo real (`dataSyncNotifier`) combinado com `useFocusEffect`.
   * Qualquer inclusão, exclusão ou importação de hinos atualiza na mesma hora o Dashboard e os Relatórios, sem delay e sem necessidade de recarregar a tela manualmente.
 
-* 📐 **SafeArea & Layout Dinâmico:**
-  * Cálculo dinâmico de insets no topo e no rodapé da barra de abas, garantindo visual perfeito sem sobreposição de Status Bar, entalhes (*punch-hole/notches*) e botões virtuais de navegação do Android/iOS.
+* 🎯 **Detecção Inteligente de Hinos Repetidos (≥ 2 Cultos):**
+  * Um hino é considerado repetido quando entoado em 2 ou mais cultos distintos no período selecionado.
+  * Desduplicação diária inviolável: se o mesmo hino for entoado mais de uma vez no mesmo dia, computa apenas 1 presença diária para análises justas.
+  * Listagem explícita com as datas de cada culto em que o hino se repetiu.
 
-* 🎯 **Regra de Negócio de Desduplicação Diária (Inviolável):**
-  * Se o mesmo hino for tocado mais de uma vez no mesmo dia (por exemplo, no culto da manhã e no culto da noite, ou repetido na mesma reunião), o sistema computa **apenas 1 presença** para o ranking daquele dia, garantindo estatísticas justas e fidedignas.
+* 💡 **UX Didática & Autoexplicativa:**
+  * Ícone de ajuda contextual `(?)` em cada card de indicador, explicando em detalhes o que o número significa, como é calculado e qual a sua utilidade prática.
 
-* 📊 **Dashboard Analítico Inteligente:**
-  * Resumo executivo de métricas: total de cultos realizados, total de hinos registrados e repertório de hinos distintos.
-  * Ranking decrescente de frequência: identifique claramente quais hinos são mais tocados e quais estão com baixa rotatividade.
-  * Filtros temporais dinâmicos: visualize os dados por **Últimos 30 dias**, **Últimos 90 dias**, **Ano Atual** ou **Todo o Histórico**.
+* 🧭 **Onboarding & Tour Guiado Interativo:**
+  * Apresenta as novidades e recursos na primeira instalação ou atualização de versão.
+  * Atalho permanente "Tour" no cabeçalho do Dashboard para rever as instruções quando desejar.
 
 * 📄 **Relatórios e Compartilhamento:**
   * Geração instantânea de relatórios consolidados em HTML formatado para impressão direta ou exportação em PDF.
-  * Integração nativa com o compartilhamento do sistema operacional para envio direto de relatórios via **WhatsApp**, **Telegram** ou **E-mail**.
+  * Integração nativa para envio direto via **WhatsApp**, **Telegram** ou **E-mail**.
 
 * 📥 **Migração e Importação de Planilhas:**
-  * Importador integrado compatível com arquivos de planilhas legadas (`.xlsx` / Excel) e CSV, permitindo carregar de uma só vez todo o histórico anterior diretamente para o banco de dados do app.
+  * Importador integrado compatível com arquivos Excel (`.xlsx`) e CSV, permitindo carregar de uma só vez todo o histórico anterior diretamente para o banco SQLite local.
 
 * 🔒 **Operação 100% Offline (Local-First):**
-  * O aplicativo funciona sem necessidade de internet, sem cadastro de conta e sem dependência de servidores em nuvem. Os dados são gravados localmente em um banco de dados relacional SQLite (`expo-sqlite`).
+  * Sem cadastro de conta, sem dependência de nuvem e sem anúncios. Seus dados ficam salvos de forma privativa apenas no seu dispositivo.
 
 ---
 
@@ -89,8 +90,8 @@ O aplicativo foi projetado para atender regentes, líderes de louvor, músicos e
 | Aba | Para que serve | Como utilizar |
 | :--- | :--- | :--- |
 | **Lançamento** | Registrar os hinos cantados no culto de hoje ou em datas anteriores. | Toque no card de data para abrir o calendário ou navegue com `<` e `>`. Digite os números dos hinos no teclado e adicione. Para expurgar um período, use o botão **Excluir Período**. |
-| **Dashboard** | Acompanhar a distribuição e repetição dos hinos. | Escolha o período desejado nos botões superiores (30d, 90d, Ano, Todos) e consulte os cartões de métricas e a listagem de frequência sincronizada em tempo real. |
-| **Relatórios** | Prestar contas ou compartilhar o repertório com o grupo de louvor. | Defina o período e ordenação, confira a pré-visualização na tela e toque em **Exportar PDF** ou **Imprimir**. |
+| **Dashboard** | Acompanhar a distribuição e repetição dos hinos. | Escolha o período desejado (30d, 90d, Ano, Todos). Filtre por `Repetidos (2+)`, consulte as datas dos cultos e use o ícone `(?)` em cada card para explicações didáticas. |
+| **Relatórios** | Prestar contas ou compartilhar o repertório com o grupo de louvor. | Defina o período, filtre por `Repetidos (2+)`, confira a pré-visualização com datas e toque em **Exportar PDF** ou **Imprimir**. |
 | **Importar** | Trazer histórico antigo já digitado em Excel. | Toque em **Selecionar Arquivo Excel**, escolha a planilha do seu dispositivo e confirme a importação automática no banco. |
 
 ---
@@ -105,13 +106,11 @@ O projeto foi construído seguindo princípios de **Clean Architecture**, **TDD 
 * **Persistência de Dados:** SQLite nativo via `expo-sqlite` (mobile) e `LocalStorage` (web preview)
 * **Sincronização Reativa:** Event Notifier pub-sub desacoplado + `useFocusEffect`
 * **Feedback e Mídia:** `expo-haptics`, `expo-print`, `expo-sharing`, `expo-document-picker`
-* **Testes Automatizados:** Jest com 100% de aprovação (90 testes unitários e de integração cobrindo domínio, repositórios, hooks e UI)
+* **Testes Automatizados:** Jest com 100% de aprovação (127 testes unitários e de integração cobrindo domínio, repositórios, hooks e UI)
 
 ---
 
 ## 💻 Como Rodar o Projeto em Desenvolvimento
-
-Caso você seja um desenvolvedor e queira contribuir ou executar o projeto em sua máquina:
 
 ### 1. Pré-requisitos
 * [Node.js](https://nodejs.org/) (versão 20 LTS ou superior)

@@ -11,6 +11,7 @@ describe('reportHtmlGenerator', () => {
       totalExecutions: 24,
       distinctHymnsCount: 15,
       neverPlayedCount: 465,
+      repeatedHymnsCount: 2,
     },
     items: [
       {
@@ -18,6 +19,7 @@ describe('reportHtmlGenerator', () => {
         distinctDaysCount: 4,
         totalExecutions: 5,
         percentageOfDays: 50,
+        dates: ['2026-10-01', '2026-10-08'],
       },
       {
         hymnNumber: 100,
@@ -34,7 +36,7 @@ describe('reportHtmlGenerator', () => {
     ],
   };
 
-  it('deve gerar um HTML válido contendo cabeçalho, métricas e tabela de hinos', () => {
+  it('deve gerar um HTML válido contendo cabeçalho, métricas de repetição e tabela de hinos', () => {
     const html = generateReportHtml(sampleData);
 
     expect(html).toContain('<!DOCTYPE html>');
@@ -44,12 +46,16 @@ describe('reportHtmlGenerator', () => {
     expect(html).toContain('31/10/2026 14:00');
 
     // Metricas
+    expect(html).toContain('Hinos Repetidos (2+)');
+    expect(html).toContain('2'); // repeatedHymnsCount
     expect(html).toContain('8'); // distinctDaysCount
     expect(html).toContain('24'); // totalExecutions
     expect(html).toContain('15'); // distinctHymnsCount
 
     // Itens da tabela
     expect(html).toContain('Hino 43');
+    expect(html).toContain('Repetido');
+    expect(html).toContain('01/10/2026, 08/10/2026');
     expect(html).toContain('Hino 100');
     expect(html).toContain('Hino 215');
     expect(html).toContain('50.0%');
