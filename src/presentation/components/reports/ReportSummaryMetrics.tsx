@@ -1,7 +1,7 @@
 /**
  * @file ReportSummaryMetrics.tsx
  * @description Cards de resumo com as 4 métricas principais calculadas para o relatório selecionado no Dark Theme.
- * Inclui ícone interativo (?) em cada card para explicação didática da regra e cálculo.
+ * Organizado em grid 2x2 espaçoso com botões (?) fixos em posição absoluta simétrica.
  */
 
 import React, { useState } from 'react';
@@ -47,65 +47,83 @@ export function ReportSummaryMetrics({ metrics }: ReportSummaryMetricsProps) {
 
   return (
     <>
-      <View style={styles.container}>
-        {/* Card 1: Repetidos (Destaque Principal) */}
-        <View style={[styles.card, styles.repeatedHighlightCard]}>
-          <View style={styles.cardHeader}>
-            <Text style={[styles.label, styles.repeatedHighlightLabel]}>Repetidos (2+)</Text>
+      <View style={styles.gridContainer}>
+        {/* Linha 1 */}
+        <View style={styles.row}>
+          {/* Card 1: Repetidos (Destaque Principal Âmbar) */}
+          <View style={[styles.card, styles.repeatedHighlightCard]}>
             <TouchableOpacity
+              style={styles.helpButton}
               onPress={() => setHelpContent(REPORT_HELP_TEXTS.repetidos)}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel="Ajuda sobre Hinos Repetidos no Relatório"
             >
-              <Ionicons name="help-circle-outline" size={14} color="#F59E0B" />
+              <Ionicons name="help-circle-outline" size={16} color="#F59E0B" />
             </TouchableOpacity>
+            <Text style={[styles.cardTitle, styles.repeatedHighlightTitle]} numberOfLines={1}>
+              Repetidos (2+)
+            </Text>
+            <Text style={[styles.cardValue, styles.repeatedHighlightValue]}>{repeatedCount}</Text>
+            <Text style={[styles.cardSubtitle, styles.repeatedHighlightSubtitle]}>
+              Cantados ≥ 2 cultos
+            </Text>
           </View>
-          <Text style={[styles.value, styles.repeatedHighlightValue]}>{repeatedCount}</Text>
-        </View>
 
-        {/* Card 2: Cantados */}
-        <View style={[styles.card, styles.highlightCard]}>
-          <View style={styles.cardHeader}>
-            <Text style={[styles.label, styles.highlightLabel]}>Cantados</Text>
+          {/* Card 2: Cantados (Destaque Azul) */}
+          <View style={[styles.card, styles.highlightCard]}>
             <TouchableOpacity
+              style={styles.helpButton}
               onPress={() => setHelpContent(REPORT_HELP_TEXTS.cantados)}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel="Ajuda sobre Hinos Cantados"
             >
-              <Ionicons name="help-circle-outline" size={14} color="#60A5FA" />
+              <Ionicons name="help-circle-outline" size={16} color="#60A5FA" />
             </TouchableOpacity>
+            <Text style={[styles.cardTitle, styles.highlightTitle]} numberOfLines={1}>
+              Cantados
+            </Text>
+            <Text style={[styles.cardValue, styles.highlightValue]}>
+              {metrics.distinctHymnsCount}
+            </Text>
+            <Text style={styles.cardSubtitle}>Hinos distintos</Text>
           </View>
-          <Text style={[styles.value, styles.highlightValue]}>{metrics.distinctHymnsCount}</Text>
         </View>
 
-        {/* Card 3: Cultos */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.label}>Cultos</Text>
+        {/* Linha 2 */}
+        <View style={styles.row}>
+          {/* Card 3: Cultos */}
+          <View style={styles.card}>
             <TouchableOpacity
+              style={styles.helpButton}
               onPress={() => setHelpContent(REPORT_HELP_TEXTS.cultos)}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel="Ajuda sobre Cultos"
             >
-              <Ionicons name="help-circle-outline" size={14} color="#94A3B8" />
+              <Ionicons name="help-circle-outline" size={16} color="#94A3B8" />
             </TouchableOpacity>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              Cultos
+            </Text>
+            <Text style={styles.cardValue}>{metrics.distinctDaysCount}</Text>
+            <Text style={styles.cardSubtitle}>Dias com louvor</Text>
           </View>
-          <Text style={styles.value}>{metrics.distinctDaysCount}</Text>
-        </View>
 
-        {/* Card 4: Nunca Tocados */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.label}>Não Tocados</Text>
+          {/* Card 4: Não Tocados */}
+          <View style={styles.card}>
             <TouchableOpacity
+              style={styles.helpButton}
               onPress={() => setHelpContent(REPORT_HELP_TEXTS.nuncaTocados)}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel="Ajuda sobre Hinos Não Tocados"
             >
-              <Ionicons name="help-circle-outline" size={14} color="#94A3B8" />
+              <Ionicons name="help-circle-outline" size={16} color="#94A3B8" />
             </TouchableOpacity>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              Não Tocados
+            </Text>
+            <Text style={styles.cardValue}>{metrics.neverPlayedCount}</Text>
+            <Text style={styles.cardSubtitle}>De 480 do hinário</Text>
           </View>
-          <Text style={styles.value}>{metrics.neverPlayedCount}</Text>
         </View>
       </View>
 
@@ -119,19 +137,23 @@ export function ReportSummaryMetrics({ metrics }: ReportSummaryMetricsProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    gap: 8,
+  gridContainer: {
     paddingHorizontal: 20,
-    marginBottom: 12,
+    marginBottom: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   card: {
     flex: 1,
+    position: 'relative',
     backgroundColor: '#1E293B', // Slate 800
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 10,
-    paddingHorizontal: 6,
-    alignItems: 'center',
+    paddingHorizontal: 12,
+    marginHorizontal: 4,
     borderWidth: 1,
     borderColor: '#334155', // Slate 700
   },
@@ -143,34 +165,46 @@ const styles = StyleSheet.create({
     backgroundColor: '#172554', // Blue 950
     borderColor: '#2563EB', // Blue 600
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginBottom: 4,
+  helpButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 10,
+    padding: 3,
   },
-  label: {
-    fontSize: 9,
+  cardTitle: {
+    fontSize: 11,
     fontWeight: '700',
     color: '#94A3B8', // Slate 400
     textTransform: 'uppercase',
-    textAlign: 'center',
+    letterSpacing: 0.3,
+    paddingRight: 20,
+    marginBottom: 3,
   },
-  repeatedHighlightLabel: {
+  repeatedHighlightTitle: {
     color: '#FBBF24', // Amber 400
   },
-  highlightLabel: {
+  highlightTitle: {
     color: '#60A5FA', // Blue 400
   },
-  value: {
-    fontSize: 18,
+  cardValue: {
+    fontSize: 20,
     fontWeight: '800',
     color: '#F8FAFC', // Slate 50
+    marginBottom: 2,
   },
   repeatedHighlightValue: {
     color: '#F59E0B', // Amber 500
   },
   highlightValue: {
     color: '#60A5FA', // Blue 400
+  },
+  cardSubtitle: {
+    fontSize: 10,
+    color: '#64748B', // Slate 500
+  },
+  repeatedHighlightSubtitle: {
+    color: '#FCD34D', // Amber 300
+    fontWeight: '500',
   },
 });

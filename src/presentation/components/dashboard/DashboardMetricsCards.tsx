@@ -54,7 +54,7 @@ const HELP_TEXTS: Record<string, MetricHelpContent> = {
 /**
  * Grid de cartões informativos com os principais KPIs de repertório de hinos:
  * Hinos Repetidos (destaque central), Repertório Cantado, Mais Cantado e Cultos Realizados.
- * Cada card possui um ícone interativo (?) para explicação didática da métrica.
+ * Cada card possui um ícone interativo (?) posicionado de forma simétrica e absoluta no canto superior direito.
  */
 export function DashboardMetricsCards({ metrics }: DashboardMetricsCardsProps) {
   const [helpContent, setHelpContent] = useState<MetricHelpContent | null>(null);
@@ -79,19 +79,17 @@ export function DashboardMetricsCards({ metrics }: DashboardMetricsCardsProps) {
         <View style={styles.row}>
           {/* Card 1 (Destaque Principal): Hinos Repetidos */}
           <View style={[styles.card, styles.repeatedHighlightCard]}>
-            <View style={styles.cardHeader}>
-              <Text style={[styles.cardTitle, styles.repeatedHighlightTitle]}>
-                Hinos Repetidos
-              </Text>
-              <TouchableOpacity
-                onPress={() => setHelpContent(HELP_TEXTS.repetidos)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                accessibilityLabel="Ajuda sobre Hinos Repetidos"
-                style={styles.helpButton}
-              >
-                <Ionicons name="help-circle-outline" size={18} color="#F59E0B" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={() => setHelpContent(HELP_TEXTS.repetidos)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Ajuda sobre Hinos Repetidos"
+              style={styles.helpButton}
+            >
+              <Ionicons name="help-circle-outline" size={17} color="#F59E0B" />
+            </TouchableOpacity>
+            <Text style={[styles.cardTitle, styles.repeatedHighlightTitle]} numberOfLines={1}>
+              Hinos Repetidos
+            </Text>
             <Text style={[styles.cardValue, styles.repeatedHighlightValue]}>
               {metrics.repeatedHymnsCount}
             </Text>
@@ -102,17 +100,17 @@ export function DashboardMetricsCards({ metrics }: DashboardMetricsCardsProps) {
 
           {/* Card 2: Repertório Cantado */}
           <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Repertório</Text>
-              <TouchableOpacity
-                onPress={() => setHelpContent(HELP_TEXTS.repertorio)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                accessibilityLabel="Ajuda sobre Repertório"
-                style={styles.helpButton}
-              >
-                <Ionicons name="help-circle-outline" size={18} color="#94A3B8" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={() => setHelpContent(HELP_TEXTS.repertorio)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Ajuda sobre Repertório"
+              style={styles.helpButton}
+            >
+              <Ionicons name="help-circle-outline" size={17} color="#94A3B8" />
+            </TouchableOpacity>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              Repertório
+            </Text>
             <Text style={styles.cardValue}>{metrics.distinctHymnsCount}</Text>
             <Text style={styles.cardSubtitle}>Hinos distintos</Text>
           </View>
@@ -122,17 +120,17 @@ export function DashboardMetricsCards({ metrics }: DashboardMetricsCardsProps) {
         <View style={styles.row}>
           {/* Card 3: Mais Cantado */}
           <View style={[styles.card, styles.highlightCard]}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Mais Cantado</Text>
-              <TouchableOpacity
-                onPress={() => setHelpContent(HELP_TEXTS.maisCantado)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                accessibilityLabel="Ajuda sobre Hino Mais Cantado"
-                style={styles.helpButton}
-              >
-                <Ionicons name="help-circle-outline" size={18} color="#60A5FA" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={() => setHelpContent(HELP_TEXTS.maisCantado)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Ajuda sobre Hino Mais Cantado"
+              style={styles.helpButton}
+            >
+              <Ionicons name="help-circle-outline" size={17} color="#60A5FA" />
+            </TouchableOpacity>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              Mais Cantado
+            </Text>
             <Text style={[styles.cardValue, styles.highlightValue]} numberOfLines={1}>
               {mostFrequentLabel}
             </Text>
@@ -141,17 +139,17 @@ export function DashboardMetricsCards({ metrics }: DashboardMetricsCardsProps) {
 
           {/* Card 4: Cultos Realizados */}
           <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Cultos / Dias</Text>
-              <TouchableOpacity
-                onPress={() => setHelpContent(HELP_TEXTS.cultos)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                accessibilityLabel="Ajuda sobre Cultos Realizados"
-                style={styles.helpButton}
-              >
-                <Ionicons name="help-circle-outline" size={18} color="#94A3B8" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={() => setHelpContent(HELP_TEXTS.cultos)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Ajuda sobre Cultos Realizados"
+              style={styles.helpButton}
+            >
+              <Ionicons name="help-circle-outline" size={17} color="#94A3B8" />
+            </TouchableOpacity>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              Cultos / Dias
+            </Text>
             <Text style={styles.cardValue}>{metrics.distinctDaysCount}</Text>
             <Text style={styles.cardSubtitle}>Com registros</Text>
           </View>
@@ -180,9 +178,11 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
+    position: 'relative',
     backgroundColor: '#1E293B', // Slate 800
     borderRadius: 16,
-    padding: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     marginHorizontal: 4,
     borderWidth: 1,
     borderColor: '#334155', // Slate 700
@@ -195,20 +195,19 @@ const styles = StyleSheet.create({
     borderColor: '#2563EB', // Blue 600
     backgroundColor: '#172554', // Blue 950 / Slate Dark
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
   helpButton: {
-    padding: 2,
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 10,
+    padding: 3,
   },
   cardTitle: {
     fontSize: 12,
     fontWeight: '700',
     color: '#CBD5E1',
-    flex: 1,
+    paddingRight: 24, // Espaço reservado para o botão de ajuda sem colisão
+    marginBottom: 4,
   },
   repeatedHighlightTitle: {
     color: '#FBBF24', // Amber 400
