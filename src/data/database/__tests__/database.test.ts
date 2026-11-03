@@ -1,6 +1,6 @@
 import { initDatabase, getDatabase, resetDatabaseCache } from '../database';
 import { MockSQLiteDatabase } from '../__mocks__/MockSQLiteDatabase';
-import { TABLE_HYMN_OCCURRENCES } from '../schema';
+import { TABLE_HYMN_OCCURRENCES, TABLE_APP_PREFERENCES } from '../schema';
 import * as SQLite from 'expo-sqlite';
 
 jest.mock('expo-sqlite', () => ({
@@ -13,7 +13,7 @@ describe('Database Initialization & Concurrency Safety', () => {
     jest.clearAllMocks();
   });
 
-  it('deve executar scripts DDL de criação da tabela de ocorrências e índices', async () => {
+  it('deve executar scripts DDL de criação da tabela de ocorrências, preferências e índices', async () => {
     // Arrange
     const mockDb = new MockSQLiteDatabase();
 
@@ -24,6 +24,7 @@ describe('Database Initialization & Concurrency Safety', () => {
     expect(mockDb.executedStatements.length).toBeGreaterThan(0);
     const fullSql = mockDb.executedStatements.join('\n');
     expect(fullSql).toContain(`CREATE TABLE IF NOT EXISTS ${TABLE_HYMN_OCCURRENCES}`);
+    expect(fullSql).toContain(`CREATE TABLE IF NOT EXISTS ${TABLE_APP_PREFERENCES}`);
     expect(fullSql).toContain('idx_hymn_occurrences_date');
     expect(fullSql).toContain('idx_hymn_occurrences_hymn_number');
     expect(fullSql).toContain('PRAGMA journal_mode = WAL');

@@ -2,6 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import {
   DATABASE_NAME,
   CREATE_TABLE_HYMN_OCCURRENCES,
+  CREATE_TABLE_APP_PREFERENCES,
   CREATE_INDEXES,
 } from './schema';
 import { ISQLiteDatabase } from './types';
@@ -19,6 +20,7 @@ export async function initDatabase(db: ISQLiteDatabase): Promise<void> {
     PRAGMA journal_mode = WAL;
     ${CREATE_TABLE_HYMN_OCCURRENCES}
     ${CREATE_INDEXES}
+    ${CREATE_TABLE_APP_PREFERENCES}
   `);
 }
 

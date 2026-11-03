@@ -9,6 +9,7 @@ import { HymnOccurrenceRow } from '../schema';
  */
 export class MockSQLiteDatabase implements ISQLiteDatabase {
   private rows: HymnOccurrenceRow[] = [];
+  private preferences: Map<string, string> = new Map();
   private currentId = 1;
   public executedStatements: string[] = [];
 
@@ -18,6 +19,9 @@ export class MockSQLiteDatabase implements ISQLiteDatabase {
     if (source.includes('DELETE FROM hymn_occurrences') || source.includes('DROP TABLE')) {
       this.rows = [];
     }
+    if (source.includes('DELETE FROM app_preferences') || source.includes('DROP TABLE')) {
+      this.preferences.clear();
+    }
   }
 
   public async runAsync(
@@ -25,8 +29,31 @@ export class MockSQLiteDatabase implements ISQLiteDatabase {
     ...params: any[]
   ): Promise<{ lastInsertRowId: number; changes: number }> {
     this.executedStatements.push(source);
+    const upper = source.toUpperCase();
 
-    if (source.toUpperCase().includes('INSERT INTO HYMN_OCCURRENCES')) {
+    // Preferências do app (app_preferences)
+    if (upper.includes('APP_PREFERENCES')) {
+      if (upper.includes('INSERT') || upper.includes('REPLACE')) {
+        const [key, value] = params;
+        this.preferences.set(String(key), String(value));
+        return { lastInsertRowId: 1, changes: 1 };
+      }
+
+      if (upper.includes('DELETE') && upper.includes('KEY =')) {
+        const key = String(params[0]);
+        const had = this.preferences.has(key);
+        this.preferences.delete(key);
+        return { lastInsertRowId: 0, changes: had ? 1 : 0 };
+      }
+
+      if (upper.includes('DELETE')) {
+        const changes = this.preferences.size;
+        this.preferences.clear();
+        return { lastInsertRowId: 0, changes };
+      }
+    }
+
+    if (upper.includes('INSERT INTO HYMN_OCCURRENCES')) {
       const [hymnNumber, date, notes] = params;
       const newRow: HymnOccurrenceRow = {
         id: this.currentId++,
@@ -39,7 +66,7 @@ export class MockSQLiteDatabase implements ISQLiteDatabase {
       return { lastInsertRowId: newRow.id, changes: 1 };
     }
 
-    if (source.toUpperCase().includes('DELETE FROM HYMN_OCCURRENCES WHERE ID =')) {
+    if (upper.includes('DELETE FROM HYMN_OCCURRENCES WHERE ID =')) {
       const id = Number(params[0]);
       const initialLength = this.rows.length;
       this.rows = this.rows.filter(r => r.id !== id);
@@ -47,7 +74,7 @@ export class MockSQLiteDatabase implements ISQLiteDatabase {
       return { lastInsertRowId: 0, changes };
     }
 
-    if (source.toUpperCase().includes('DELETE FROM HYMN_OCCURRENCES') && source.toUpperCase().includes('DATE >=') && source.toUpperCase().includes('DATE <=')) {
+    if (upper.includes('DELETE FROM HYMN_OCCURRENCES') && upper.includes('DATE >=') && upper.includes('DATE <=')) {
       const [startDate, endDate] = params;
       const initialLength = this.rows.length;
       this.rows = this.rows.filter(r => r.date < String(startDate) || r.date > String(endDate));
@@ -55,7 +82,7 @@ export class MockSQLiteDatabase implements ISQLiteDatabase {
       return { lastInsertRowId: 0, changes };
     }
 
-    if (source.toUpperCase().includes('DELETE FROM HYMN_OCCURRENCES')) {
+    if (upper.includes('DELETE FROM HYMN_OCCURRENCES')) {
       const changes = this.rows.length;
       this.rows = [];
       return { lastInsertRowId: 0, changes };
@@ -67,6 +94,19 @@ export class MockSQLiteDatabase implements ISQLiteDatabase {
   public async getAllAsync<T>(source: string, ...params: any[]): Promise<T[]> {
     this.executedStatements.push(source);
     const upper = source.toUpperCase();
+
+    // Preferências
+    if (upper.includes('FROM APP_PREFERENCES')) {
+      if (upper.includes('WHERE KEY =') || upper.includes('WHERE KEY = ?')) {
+        const key = String(params[0]);
+        const val = this.preferences.get(key);
+        if (val !== undefined) {
+          return [{ key, value: val }] as unknown as T[];
+        }
+        return [];
+      }
+      return Array.from(this.preferences.entries()).map(([key, value]) => ({ key, value })) as unknown as T[];
+    }
 
     let filtered = [...this.rows];
 
@@ -108,6 +148,16 @@ export class MockSQLiteDatabase implements ISQLiteDatabase {
   }
 
   public async getFirstAsync<T>(source: string, ...params: any[]): Promise<T | null> {
+    const upper = source.toUpperCase();
+    if (upper.includes('FROM APP_PREFERENCES') && (upper.includes('WHERE KEY =') || upper.includes('WHERE KEY = ?'))) {
+      const key = String(params[0]);
+      const val = this.preferences.get(key);
+      if (val !== undefined) {
+        return { value: val } as unknown as T;
+      }
+      return null;
+    }
+
     const results = await this.getAllAsync<T>(source, ...params);
     return results.length > 0 ? results[0] : null;
   }
@@ -119,6 +169,10 @@ export class MockSQLiteDatabase implements ISQLiteDatabase {
   // Helpers para asserções de teste
   public getStoredRows(): HymnOccurrenceRow[] {
     return [...this.rows];
+  }
+
+  public getStoredPreferences(): Map<string, string> {
+    return new Map(this.preferences);
   }
 
   public seedRows(

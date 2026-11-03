@@ -8,6 +8,7 @@
 export const DATABASE_NAME = 'analise_hinos.db';
 
 export const TABLE_HYMN_OCCURRENCES = 'hymn_occurrences';
+export const TABLE_APP_PREFERENCES = 'app_preferences';
 
 /**
  * Script DDL para criação da tabela principal de ocorrências de hinos.
@@ -23,6 +24,18 @@ export const CREATE_TABLE_HYMN_OCCURRENCES = `
 `;
 
 /**
+ * Script DDL para criação da tabela de preferências e configurações locais do app.
+ * Armazena pares chave-valor persistentes (ex: última versão do tour/onboarding concluído).
+ */
+export const CREATE_TABLE_APP_PREFERENCES = `
+  CREATE TABLE IF NOT EXISTS ${TABLE_APP_PREFERENCES} (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+  );
+`;
+
+/**
  * Índices para otimização de consultas por data e por número de hino.
  */
 export const CREATE_INDEXES = `
@@ -31,7 +44,7 @@ export const CREATE_INDEXES = `
 `;
 
 /**
- * Modelo de linha retornado diretamente pelo SQLite.
+ * Modelo de linha retornado diretamente pelo SQLite para ocorrências de hinos.
  */
 export interface HymnOccurrenceRow {
   id: number;
@@ -39,4 +52,13 @@ export interface HymnOccurrenceRow {
   date: string;
   notes: string | null;
   created_at: string;
+}
+
+/**
+ * Modelo de linha para chave-valor de preferências da aplicação no SQLite.
+ */
+export interface AppPreferenceRow {
+  key: string;
+  value: string;
+  updated_at: string;
 }
