@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20Mode-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Database](https://img.shields.io/badge/SQLite-Local--First%20(Offline)-003B57?style=flat&logo=sqlite)](https://docs.expo.dev/versions/latest/sdk/sqlite/)
 [![Tests](https://img.shields.io/badge/Tests-100%25%20Passing-success?style=flat&logo=jest)](https://jestjs.io/)
-[![Version](https://img.shields.io/badge/Version-1.0.6-blue?style=flat)](https://github.com/wesley1248/AnaliseHinoApp/releases/tag/v1.0.6)
+[![Version](https://img.shields.io/badge/Version-1.0.7-blue?style=flat)](https://github.com/wesley1248/AnaliseHinoApp/releases/tag/v1.0.7)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -106,7 +106,7 @@ O projeto foi construído seguindo princípios de **Clean Architecture**, **TDD 
 * **Persistência de Dados:** SQLite nativo via `expo-sqlite` (mobile) e `LocalStorage` (web preview)
 * **Sincronização Reativa:** Event Notifier pub-sub desacoplado + `useFocusEffect`
 * **Feedback e Mídia:** `expo-haptics`, `expo-print`, `expo-sharing`, `expo-document-picker`
-* **Testes Automatizados:** Jest com 100% de aprovação (127 testes unitários e de integração cobrindo domínio, repositórios, hooks e UI)
+* **Testes Automatizados:** Jest com 100% de aprovação (134 testes unitários e de integração cobrindo domínio, repositórios, hooks e UI)
 
 ---
 

@@ -10,7 +10,7 @@ import Constants from 'expo-constants';
 import { IOnboardingStorage, defaultOnboardingStorage } from '@/data/preferences/onboardingStorage';
 
 export const APP_CURRENT_VERSION =
-  Constants.expoConfig?.version || '1.0.6';
+  Constants.expoConfig?.version || '1.0.7';
 
 export interface UseOnboardingTourOptions {
   storage?: IOnboardingStorage;
